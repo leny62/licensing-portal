@@ -19,6 +19,7 @@
     "db:migrate": "prisma migrate deploy --schema prisma/schema",
     "db:migrate:dev": "prisma migrate dev --schema prisma/schema",
     "db:generate": "prisma generate --schema prisma/schema",
+    "db:validate": "prisma validate --schema prisma/schema",
     "db:seed": "ts-node -r tsconfig-paths/register src/seed/seed.ts",
     "test": "jest --config jest.config.ts --passWithNoTests",
     "test:unit": "jest --config jest.unit.config.ts --coverage",

@@ -8,15 +8,20 @@
     "packages/*"
   ],
   "scripts": {
-    "api:dev":     "npm run start:dev --workspace api",
-    "api:build":   "npm run build --workspace api",
-    "api:test":    "npm test --workspace api",
-    "api:lint":    "npm run lint --workspace api",
-    "api:migrate": "npm run db:migrate --workspace api",
-    "api:seed":    "npm run db:seed --workspace api",
-    "lint":        "npm run lint --workspaces --if-present",
-    "test":        "npm test --workspaces --if-present",
-    "build":       "npm run build --workspaces --if-present"
+    "api:dev": "npm --workspace apps/api run start:dev",
+    "api:build": "npm --workspace apps/api run build",
+    "api:test": "npm --workspace apps/api test",
+    "api:lint": "npm --workspace apps/api run lint",
+    "api:migrate": "npm --workspace apps/api run db:migrate",
+    "api:seed": "npm --workspace apps/api run db:seed",
+    "prisma:migrate": "npm --workspace apps/api run db:migrate",
+    "prisma:migrate:dev": "npm --workspace apps/api run db:migrate:dev",
+    "prisma:generate": "npm --workspace apps/api run db:generate",
+    "prisma:validate": "npm --workspace apps/api run db:validate",
+    "prisma:seed": "npm --workspace apps/api run db:seed",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
   },
   "engines": {
     "node": ">=20.0.0",

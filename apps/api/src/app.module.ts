@@ -12,6 +12,13 @@ import { AuditModule } from './infra/audit/audit.module';
 import { KeysModule } from './infra/keys/keys.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { StorageModule } from './infra/storage/storage.module';
+import { ApplicationsModule } from './modules/applications/applications.module';
+import { AuditApiModule } from './modules/audit/audit.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { HealthModule } from './modules/health/health.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { UsersModule } from './modules/users/users.module';
 
 const redactedLogPaths = [
   'req.headers.authorization',
@@ -62,6 +69,13 @@ const redactedLogPaths = [
     StorageModule,
     AuditModule,
     PrismaModule,
+    AuthModule,
+    UsersModule,
+    ApplicationsModule,
+    DocumentsModule,
+    AuditApiModule,
+    NotificationsModule,
+    HealthModule,
   ],
   providers: [
     {
