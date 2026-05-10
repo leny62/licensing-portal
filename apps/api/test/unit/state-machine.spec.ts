@@ -39,6 +39,18 @@ describe('transitionApplication', () => {
       ApplicationState.WITHDRAWN,
     ],
     [
+      ApplicationAction.Withdraw,
+      ApplicationState.SUBMITTED,
+      UserRole.APPLICANT,
+      ApplicationState.WITHDRAWN,
+    ],
+    [
+      ApplicationAction.Withdraw,
+      ApplicationState.UNDER_REVIEW,
+      UserRole.APPLICANT,
+      ApplicationState.WITHDRAWN,
+    ],
+    [
       ApplicationAction.Claim,
       ApplicationState.SUBMITTED,
       UserRole.REVIEWER,

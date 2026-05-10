@@ -5,10 +5,11 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  ViewChild,
   inject,
 } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatStepperModule } from '@angular/material/stepper';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 
 import { FormSelectData, StepConfig } from '../../../core/interfaces/form.interface';
 import { ButtonComponent } from '../button/button.component';
@@ -30,6 +31,8 @@ import { FormbuilderGroup, FormbuilderService } from './formbuilder.service';
   styleUrl: './formbuilder.component.scss',
 })
 export class FormbuilderComponent implements OnChanges {
+  @ViewChild(MatStepper) stepper!: MatStepper;
+
   private readonly formbuilder = inject(FormbuilderService);
 
   @Input() steps: StepConfig[] = [];
@@ -49,6 +52,23 @@ export class FormbuilderComponent implements OnChanges {
 
   stepGroup(index: number): FormGroup {
     return this.form.get(`step${index}`) as FormGroup;
+  }
+
+  next(): void {
+    const currentIndex = this.stepper.selectedIndex;
+    const group = this.stepGroup(currentIndex);
+
+    group.markAllAsTouched();
+
+    if (group.invalid) {
+      return;
+    }
+
+    this.stepper.selectedIndex = Math.min(currentIndex + 1, this.steps.length);
+  }
+
+  previous(): void {
+    this.stepper.selectedIndex = Math.max(this.stepper.selectedIndex - 1, 0);
   }
 
   submit(): void {

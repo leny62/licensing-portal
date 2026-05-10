@@ -11,6 +11,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponse } from './interfaces/user-response.interface';
 import { UsersService } from './users.service';
@@ -33,6 +34,12 @@ export class UsersController {
   }
 
   @Roles(UserRole.ADMIN)
+  @Get('users/:id')
+  async get(@Param('id') id: string): Promise<UserResponse> {
+    return this.usersService.getById(id);
+  }
+
+  @Roles(UserRole.ADMIN)
   @Post('users')
   async create(@Body() body: CreateUserDto): Promise<UserResponse> {
     return this.usersService.create(body);
@@ -42,6 +49,12 @@ export class UsersController {
   @Patch('users/:id')
   async update(@Param('id') id: string, @Body() body: UpdateUserDto): Promise<UserResponse> {
     return this.usersService.update(id, body);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('users/:id/password')
+  async resetPassword(@Param('id') id: string, @Body() body: ResetUserPasswordDto): Promise<void> {
+    await this.usersService.resetPassword(id, body.newPassword);
   }
 
   @Roles(UserRole.ADMIN)

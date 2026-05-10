@@ -5,6 +5,7 @@ import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxj
 
 import {
   ChangePasswordRequest,
+  ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
   LoginSuccessResponse,
@@ -158,9 +159,22 @@ export class AuthService {
     return this.api.post<void, ChangePasswordRequest>('/auth/password', body);
   }
 
+  requestPasswordReset(body: ForgotPasswordRequest): Observable<void> {
+    return this.api.post<void, ForgotPasswordRequest>('/auth/forgot-password', body, {
+      context: this.publicContext(),
+    });
+  }
+
   redirectToRoleHome(): void {
     const user = this.currentUser();
     void this.router.navigateByUrl(user === null ? '/login' : roleHome(user.role));
+  }
+
+  cancelMfa(): void {
+    this.pendingMfa.set(false);
+    this.mfaToken.set(null);
+    this.currentUserSignal.set(null);
+    void this.router.navigateByUrl('/login');
   }
 
   getStoredRefreshToken(): string | null {

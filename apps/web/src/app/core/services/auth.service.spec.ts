@@ -73,6 +73,29 @@ describe(AuthService.name, () => {
     expect(service.accessToken).toBeNull();
   });
 
+  it('cancels MFA and returns to the login screen', () => {
+    api.post.and.returnValue(
+      of({
+        mfaRequired: true,
+        mfaToken: 'mfa-token',
+        user: {
+          id: 'reviewer-1',
+          email: 'reviewer@licensing.local',
+          role: UserRole.Reviewer,
+        },
+      }),
+    );
+
+    const service = TestBed.inject(AuthService);
+    service.login({ email: 'reviewer@licensing.local', password: 'LocalPass123!' }).subscribe();
+    service.cancelMfa();
+
+    expect(service.pendingMfa()).toBeFalse();
+    expect(service.mfaToken()).toBeNull();
+    expect(service.currentUser()).toBeNull();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/login');
+  });
+
   it('completes MFA and clears pending challenge state', () => {
     const service = TestBed.inject(AuthService);
     api.post.and.returnValues(

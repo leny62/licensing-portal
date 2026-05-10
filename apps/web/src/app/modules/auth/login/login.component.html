@@ -1,6 +1,6 @@
 <main class="login-page">
   <section class="login-shell" aria-label="Licensing portal sign in">
-    <aside class="assurance-panel">
+    <aside class="institution-panel">
       <div class="brand-row">
         <div class="brand-mark">BL</div>
         <div>
@@ -9,41 +9,30 @@
         </div>
       </div>
 
-      <div class="assurance-copy">
-        <p class="eyebrow">Secure workspace</p>
-        <h2>Review applications, decisions, and audit history from one controlled surface.</h2>
-        <p>
-          Access is role-scoped and every protected action is verified by the backend before it is
-          accepted.
-        </p>
+      <div class="portal-summary">
+        <p class="eyebrow">Licensing and compliance</p>
+        <h2>Bank licensing applications</h2>
+        <p>Sign in to manage applications, reviews, approvals, and compliance records.</p>
       </div>
 
-      <div class="assurance-grid">
-        <div>
-          <mat-icon aria-hidden="true">verified_user</mat-icon>
-          <span>Role-gated actions</span>
-        </div>
-        <div>
-          <mat-icon aria-hidden="true">fact_check</mat-icon>
-          <span>Append-only audit</span>
-        </div>
-        <div>
-          <mat-icon aria-hidden="true">lock</mat-icon>
-          <span>Encrypted documents</span>
-        </div>
+      <div class="access-note">
+        <span>Authorised users only</span>
+        <p>For account access or password support, contact the licensing administrator.</p>
       </div>
     </aside>
 
     <section class="signin-panel">
       <div class="signin-heading">
-        <p class="eyebrow">Authorised access</p>
+        <p class="eyebrow">Account sign in</p>
         <h2>Sign in</h2>
-        <p>Use your provisioned portal account.</p>
+        <p>Use your assigned portal credentials.</p>
       </div>
 
       <form [formGroup]="form" class="signin-form" (ngSubmit)="submit()">
         <app-inputs [field]="emailField" [group]="form"></app-inputs>
         <app-inputs [field]="passwordField" [group]="form"></app-inputs>
+
+        <a class="forgot-link" routerLink="/forgot-password">Forgot password?</a>
 
         @if (errorMessage) {
           <p class="error-message" aria-live="polite">

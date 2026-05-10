@@ -29,6 +29,10 @@ export interface UpdateUserRequest {
   institutionName?: string | null;
 }
 
+export interface ResetUserPasswordRequest {
+  newPassword: string;
+}
+
 export interface ListUsersQuery {
   role?: UserRole;
   q?: string;

@@ -17,7 +17,6 @@ import {
 } from '../../../core/interfaces/table.interface';
 import { formatDateTime } from '../../../core/utils/application-view.mapper';
 import { EmptyStateComponent } from '../empty-state/empty-state.component';
-import { LoadingStateComponent } from '../loading-state/loading-state.component';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 
 @Component({
@@ -25,7 +24,6 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component';
   standalone: true,
   imports: [
     EmptyStateComponent,
-    LoadingStateComponent,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
@@ -63,6 +61,7 @@ export class TableComponent<T extends object> implements OnChanges {
   selectedFilters: Record<string, unknown> = {};
   currentPageIndex = 0;
   currentPageSize = 10;
+  readonly skeletonRows = Array.from({ length: 6 });
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pageSize']) {
@@ -138,6 +137,11 @@ export class TableComponent<T extends object> implements OnChanges {
 
   handleSearchInput(value: string): void {
     this.searchTerm = value;
+  }
+
+  handleSearchSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    this.submitSearch();
   }
 
   submitSearch(): void {

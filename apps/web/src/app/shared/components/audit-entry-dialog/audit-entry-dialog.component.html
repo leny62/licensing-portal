@@ -1,0 +1,83 @@
+<section class="audit-dialog">
+  <header>
+    <div class="title-mark">
+      <mat-icon aria-hidden="true">history</mat-icon>
+    </div>
+    <div>
+      <p>Audit entry</p>
+      <h2>{{ actionLabel() }}</h2>
+      <span>{{ transitionLabel() }}</span>
+    </div>
+  </header>
+
+  <div class="summary-panel">
+    <div>
+      <span>Timestamp</span>
+      <strong>{{ occurredAtLabel() }}</strong>
+    </div>
+    <div>
+      <span>Actor</span>
+      <strong>{{ actorLabel() }}</strong>
+    </div>
+    <div>
+      <span>Correlation ID</span>
+      <strong>{{ entry.correlationId ?? 'Not recorded' }}</strong>
+    </div>
+  </div>
+
+  <dl class="detail-grid">
+    <div>
+      <dt>Action</dt>
+      <dd>{{ entry.action }}</dd>
+    </div>
+    <div>
+      <dt>Application ID</dt>
+      <dd>{{ entry.applicationId }}</dd>
+    </div>
+    <div>
+      <dt>Actor ID</dt>
+      <dd>{{ entry.actorId ?? 'System' }}</dd>
+    </div>
+    <div>
+      <dt>Source IP</dt>
+      <dd>{{ entry.sourceIp ?? 'Not recorded' }}</dd>
+    </div>
+    <div>
+      <dt>Clock offset</dt>
+      <dd>{{ entry.clockOffsetMs }} ms</dd>
+    </div>
+    <div>
+      <dt>Payload summary</dt>
+      <dd>{{ payloadSummary() }}</dd>
+    </div>
+  </dl>
+
+  @if (entry.justification) {
+    <section class="justification-panel">
+      <span>Justification</span>
+      <p>{{ entry.justification }}</p>
+    </section>
+  }
+
+  <section class="hash-panel">
+    <div>
+      <span>Previous hash</span>
+      <code [title]="entry.previousHash ?? ''">{{ previousHashLabel() }}</code>
+    </div>
+    <div>
+      <span>Entry hash</span>
+      <code [title]="entry.entryHash">{{ entry.entryHash }}</code>
+    </div>
+  </section>
+
+  <section class="payload-panel">
+    <div>
+      <span>Payload</span>
+    </div>
+    <pre>{{ payloadText() }}</pre>
+  </section>
+
+  <footer>
+    <app-button type="button" variant="secondary" icon="close" (click)="close()">Close</app-button>
+  </footer>
+</section>

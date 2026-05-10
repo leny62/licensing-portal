@@ -2,7 +2,14 @@ import { createCipheriv, createHash, randomBytes, randomUUID } from 'node:crypto
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { ApplicationState, NotificationType, PrismaClient, User, UserRole } from '@prisma/client';
+import {
+  ApplicationState,
+  BankCategory,
+  NotificationType,
+  PrismaClient,
+  User,
+  UserRole,
+} from '@prisma/client';
 import * as argon2 from 'argon2';
 import { config as loadEnv } from 'dotenv';
 
@@ -262,6 +269,8 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
       referenceNumber: 'APP-SEED-DRAFT',
       applicantId: applicant.id,
       institutionName: 'Kigali Community Bank',
+      bankCategory: BankCategory.COMMERCIAL_BANK,
+      paidUpCapitalRwf: 20000000000,
       legalForm: 'Limited Company',
       country: 'RW',
       contactPerson: 'Aline Applicant',
@@ -280,6 +289,8 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
       applicantId: applicant.id,
       reviewerId: reviewer.id,
       institutionName: 'Rwanda Digital Trust Bank',
+      bankCategory: BankCategory.COMMERCIAL_BANK,
+      paidUpCapitalRwf: 25000000000,
       legalForm: 'Public Company',
       country: 'RW',
       contactPerson: 'Aline Applicant',
@@ -300,6 +311,8 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
       applicantId: applicant.id,
       reviewerId: reviewer.id,
       institutionName: 'East Africa Microfinance Ltd',
+      bankCategory: BankCategory.COOPERATIVE_BANK,
+      paidUpCapitalRwf: 10000000000,
       legalForm: 'Limited Company',
       country: 'RW',
       contactPerson: 'Aline Applicant',

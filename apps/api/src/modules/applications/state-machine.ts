@@ -53,6 +53,8 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       requireApplicantOwns(input);
       if (
         input.currentState !== ApplicationState.DRAFT &&
+        input.currentState !== ApplicationState.SUBMITTED &&
+        input.currentState !== ApplicationState.UNDER_REVIEW &&
         input.currentState !== ApplicationState.CHANGES_REQUESTED
       ) {
         throw illegal(input);
@@ -105,7 +107,14 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       requireActor(input, UserRole.APPROVER);
       requireSeparationOfDuties(input);
       return { nextState: ApplicationState.REJECTED };
+
+    case ApplicationAction.CreateDraft:
+    case ApplicationAction.UpdateDraft:
+    case ApplicationAction.UploadDocument:
+      throw illegal(input);
   }
+
+  throw illegal(input);
 };
 
 const requireState = (input: TransitionInput, state: ApplicationState): void => {

@@ -3,7 +3,7 @@
     <div class="brand-mark">BL</div>
     <div>
       <p class="brand-title">Licensing Portal</p>
-      <p class="brand-subtitle">Compliance workspace</p>
+      <p class="brand-subtitle">Compliance operations</p>
     </div>
   </div>
 
@@ -20,6 +20,7 @@
     <div class="user-panel">
       <p class="truncate text-sm font-semibold text-gray-900">{{ currentUser.email }}</p>
       <p class="text-xs text-gray-500">{{ currentUser.role }}</p>
+      <app-button variant="ghost" icon="account_circle" routerLink="/profile">Profile</app-button>
       <app-button variant="ghost" icon="logout" (click)="logout()">Sign out</app-button>
     </div>
   }

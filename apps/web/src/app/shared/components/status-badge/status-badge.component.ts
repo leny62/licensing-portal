@@ -2,6 +2,7 @@ import { NgClass } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
 import { ApplicationState } from '../../../core/enums/application-state.enum';
+import { ComplianceCheckStatus } from '../../../core/enums/compliance-check-status.enum';
 import { UserRole } from '../../../core/enums/user-role.enum';
 
 @Component({
@@ -39,6 +40,10 @@ export class StatusBadgeComponent {
       INFO: 'Info',
       WARN: 'Warn',
       ERROR: 'Error',
+      [ComplianceCheckStatus.Complete]: 'Complete',
+      [ComplianceCheckStatus.Missing]: 'Missing',
+      [ComplianceCheckStatus.ReviewRequired]: 'Needs review',
+      [ComplianceCheckStatus.NotApplicable]: 'Not applicable',
     };
 
     return labels[this.state] ?? this.state;
@@ -69,6 +74,10 @@ export class StatusBadgeComponent {
       INFO: 'blue',
       WARN: 'amber',
       ERROR: 'red',
+      [ComplianceCheckStatus.Complete]: 'green',
+      [ComplianceCheckStatus.Missing]: 'red',
+      [ComplianceCheckStatus.ReviewRequired]: 'amber',
+      [ComplianceCheckStatus.NotApplicable]: 'neutral',
     };
 
     return tones[this.state] ?? 'neutral';

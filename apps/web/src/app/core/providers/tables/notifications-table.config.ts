@@ -1,5 +1,12 @@
+import { NotificationType } from '../../enums/notification-type.enum';
 import { NotificationResponse } from '../../interfaces/notification.interface';
 import { TableConfig } from '../../interfaces/table.interface';
+
+const notificationTypeLabels: Record<NotificationType, string> = {
+  [NotificationType.RequestInfo]: 'Information requested',
+  [NotificationType.FinalDecision]: 'Final decision',
+  [NotificationType.RecommendationReady]: 'Recommendation ready',
+};
 
 export const notificationsTableConfig: TableConfig<NotificationResponse> = {
   trackBy: 'id',
@@ -20,7 +27,12 @@ export const notificationsTableConfig: TableConfig<NotificationResponse> = {
     },
   ],
   columns: [
-    { key: 'type', label: 'Type', type: 'text' },
+    {
+      key: 'type',
+      label: 'Type',
+      type: 'text',
+      format: (value) => notificationTypeLabels[value as NotificationType] ?? String(value),
+    },
     {
       key: 'applicationId',
       label: 'Application',

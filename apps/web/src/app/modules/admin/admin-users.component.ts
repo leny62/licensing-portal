@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { UserRole } from '../../core/enums/user-role.enum';
@@ -37,6 +38,7 @@ export class AdminUsersComponent implements OnInit {
     private readonly usersService: UsersService,
     private readonly dialog: MatDialog,
     private readonly notify: NotifyService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -87,6 +89,11 @@ export class AdminUsersComponent implements OnInit {
   }
 
   handleAction(event: TableActionEvent<UserResponse>): void {
+    if (event.actionId === 'view') {
+      void this.router.navigate(['/admin/users', event.row.id]);
+      return;
+    }
+
     if (event.actionId === 'edit') {
       this.openDialog(event.row);
       return;

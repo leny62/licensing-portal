@@ -90,27 +90,29 @@ export class SystemLogsService {
   }
 
   async write(input: CreateSystemLogInput): Promise<void> {
-    await this.prisma.systemLog.create({
-      data: {
-        userId: input.userId ?? null,
-        userName: input.userName ?? null,
-        level: input.level,
-        method: input.method ?? null,
-        url: input.url,
-        message: input.message,
-        requestId: input.requestId ?? null,
-        exception: input.exception ?? null,
-        logger: input.logger ?? null,
-        hostAddress: input.hostAddress ?? null,
-        browser: input.browser ?? null,
-        serverName: input.serverName ?? null,
-        code: input.code ?? null,
-        deviceId: input.deviceId ?? null,
-        thread: input.thread ?? null,
-        businessLayer: input.businessLayer ?? null,
-        applicationName: input.applicationName ?? 'Licensing Portal API',
-      },
-    });
+    await this.withMigrationHint(
+      this.prisma.systemLog.create({
+        data: {
+          userId: input.userId ?? null,
+          userName: input.userName ?? null,
+          level: input.level,
+          method: input.method ?? null,
+          url: input.url,
+          message: input.message,
+          requestId: input.requestId ?? null,
+          exception: input.exception ?? null,
+          logger: input.logger ?? null,
+          hostAddress: input.hostAddress ?? null,
+          browser: input.browser ?? null,
+          serverName: input.serverName ?? null,
+          code: input.code ?? null,
+          deviceId: input.deviceId ?? null,
+          thread: input.thread ?? null,
+          businessLayer: input.businessLayer ?? null,
+          applicationName: input.applicationName ?? 'Licensing Portal API',
+        },
+      }),
+    );
   }
 
   private where(query: ListSystemLogsQueryDto): Prisma.SystemLogWhereInput {

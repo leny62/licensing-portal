@@ -1,0 +1,92 @@
+<section class="log-dialog">
+  <header>
+    <div class="title-mark">
+      <mat-icon aria-hidden="true">receipt_long</mat-icon>
+    </div>
+    <div class="min-w-0">
+      <div class="title-row">
+        <h2>System log details</h2>
+        <app-status-badge [state]="log.level"></app-status-badge>
+      </div>
+      <p>{{ log.message }}</p>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <div>
+      <span>Date</span>
+      <strong>{{ occurredAtLabel() }}</strong>
+    </div>
+    <div>
+      <span>User</span>
+      <strong>{{ log.userName ?? 'Anonymous' }}</strong>
+    </div>
+    <div>
+      <span>Status</span>
+      <strong>{{ log.code ?? 'Not recorded' }}</strong>
+    </div>
+    <div>
+      <span>Request ID</span>
+      <strong>{{ log.requestId ?? 'Not recorded' }}</strong>
+    </div>
+  </section>
+
+  <section class="detail-section">
+    <h3>Request</h3>
+    <dl>
+      <div>
+        <dt>Route</dt>
+        <dd>{{ requestLabel() }}</dd>
+      </div>
+      <div>
+        <dt>Host address</dt>
+        <dd>{{ log.hostAddress ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Browser</dt>
+        <dd>{{ log.browser ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Device ID</dt>
+        <dd>{{ log.deviceId ?? 'Not recorded' }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="detail-section">
+    <h3>Runtime</h3>
+    <dl>
+      <div>
+        <dt>Logger</dt>
+        <dd>{{ log.logger ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Business layer</dt>
+        <dd>{{ log.businessLayer ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Server</dt>
+        <dd>{{ log.serverName ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Thread</dt>
+        <dd>{{ log.thread ?? 'Not recorded' }}</dd>
+      </div>
+      <div>
+        <dt>Application</dt>
+        <dd>{{ log.applicationName }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (log.exception) {
+    <section class="exception-panel">
+      <h3>Exception</h3>
+      <pre>{{ log.exception }}</pre>
+    </section>
+  }
+
+  <footer>
+    <app-button type="button" variant="secondary" icon="close" (click)="close()">Close</app-button>
+  </footer>
+</section>

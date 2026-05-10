@@ -1,4 +1,4 @@
-import { Application, ApplicationState, UserRole } from '@prisma/client';
+import { Application, ApplicationState, BankCategory, Prisma, UserRole } from '@prisma/client';
 
 import { canEditDraft, canViewApplication } from '../../src/modules/applications/access-policy';
 
@@ -9,6 +9,8 @@ const application = (overrides: Partial<Application> = {}): Application => ({
   referenceNumber: 'APP-1',
   applicantId: 'applicant-1',
   institutionName: 'Policy Bank',
+  bankCategory: BankCategory.COMMERCIAL_BANK,
+  paidUpCapitalRwf: new Prisma.Decimal(20000000000),
   legalForm: 'Limited Company',
   country: 'Rwanda',
   contactPerson: 'Policy Contact',

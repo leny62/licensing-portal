@@ -1,0 +1,63 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Profile</h1>
+      <p class="page-copy">Review your account and rotate your password.</p>
+    </div>
+    <app-button type="button" variant="secondary" icon="arrow_back" [routerLink]="['/']">
+      Workspace
+    </app-button>
+  </header>
+
+  @if (isLoading) {
+    <app-loading-state label="Loading profile"></app-loading-state>
+  } @else if (hasError || user === null) {
+    <app-error-state title="Profile unavailable" (retry)="load()"></app-error-state>
+  } @else {
+    <section class="profile-layout">
+      <article class="surface profile-card">
+        <div class="profile-mark">{{ user.fullName.charAt(0) }}</div>
+        <div>
+          <p class="section-kicker">Signed in as</p>
+          <h2>{{ user.fullName }}</h2>
+          <p>{{ user.email }}</p>
+        </div>
+        <dl>
+          <div>
+            <dt>Role</dt>
+            <dd>{{ user.role }}</dd>
+          </div>
+          <div>
+            <dt>Institution</dt>
+            <dd>{{ user.institutionName ?? 'Internal regulator account' }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ user.isActive ? 'Active' : 'Inactive' }}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{{ user.updatedAt | date: 'medium' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="surface password-card">
+        <div>
+          <p class="section-kicker">Security</p>
+          <h2>Change password</h2>
+          <p>Changing your password revokes existing refresh sessions.</p>
+        </div>
+
+        <form [formGroup]="form" class="password-form" (ngSubmit)="submit()">
+          <app-inputs [field]="currentPasswordField" [group]="form"></app-inputs>
+          <app-inputs [field]="newPasswordField" [group]="form"></app-inputs>
+          <app-inputs [field]="confirmPasswordField" [group]="form"></app-inputs>
+          <app-button type="submit" icon="lock_reset" [loading]="isSaving">
+            Update password
+          </app-button>
+        </form>
+      </article>
+    </section>
+  }
+</div>

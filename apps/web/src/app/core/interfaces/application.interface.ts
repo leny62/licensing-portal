@@ -1,11 +1,14 @@
 import { ApplicationDecision } from '../enums/application-decision.enum';
 import { ApplicationState } from '../enums/application-state.enum';
+import { BankCategory } from '../enums/bank-category.enum';
 
 export interface ApplicationResponse {
   id: string;
   referenceNumber: string;
   applicantId: string;
   institutionName: string;
+  bankCategory: BankCategory;
+  paidUpCapitalRwf: string;
   legalForm: string;
   country: string;
   contactPerson: string;
@@ -26,6 +29,8 @@ export interface ApplicationResponse {
 
 export interface CreateApplicationRequest {
   institutionName: string;
+  bankCategory: BankCategory;
+  paidUpCapitalRwf: number;
   legalForm: string;
   country: string;
   contactPerson: string;

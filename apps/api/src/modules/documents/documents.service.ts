@@ -2,6 +2,7 @@ import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { ApplicationDocument, ApplicationState, UserRole } from '@prisma/client';
 
 import { ConflictError, ResourceNotFoundError } from '../../common/errors/domain.errors';
+import { AuditService } from '../../infra/audit/audit.service';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { DOCUMENT_STORAGE } from '../../infra/storage/storage.tokens';
 import { DocumentStorage } from '../../infra/storage/interfaces/document-storage.interface';
@@ -12,11 +13,13 @@ import {
   UploadDocumentInput,
 } from './interfaces/document-response.interface';
 import { prepareDocumentUploadStream } from './upload-stream';
+import { ApplicationAction } from '../applications/enums/application-action.enum';
 
 @Injectable()
 export class DocumentsService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
     @Inject(DOCUMENT_STORAGE) private readonly documentStorage: DocumentStorage,
   ) {}
 
@@ -51,7 +54,7 @@ export class DocumentsService {
         });
         const version = (latest?.version ?? 0) + 1;
 
-        return tx.applicationDocument.create({
+        const document = await tx.applicationDocument.create({
           data: {
             applicationId: input.applicationId,
             slot: input.slot,
@@ -66,6 +69,23 @@ export class DocumentsService {
             uploaderId: actor.id,
           },
         });
+
+        await this.auditService.write(tx, {
+          applicationId: input.applicationId,
+          actorId: actor.id,
+          action: ApplicationAction.UploadDocument,
+          fromState: application.state,
+          toState: application.state,
+          payload: {
+            documentId: document.id,
+            slot: document.slot,
+            version: document.version,
+            mimeType: document.mimeType,
+            sizeBytes: document.sizeBytes,
+          },
+        });
+
+        return document;
       });
 
       return this.mapDocument(row);

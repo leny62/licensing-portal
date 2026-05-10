@@ -1,0 +1,86 @@
+:host {
+  display: block;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(320px, 1fr);
+  gap: 1rem;
+}
+
+.profile-card,
+.password-card {
+  border-radius: 14px;
+  padding: 1.15rem;
+}
+
+.profile-card {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.profile-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 14px;
+  background: #213769;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 850;
+}
+
+.section-kicker {
+  margin: 0;
+  color: #98a2b3;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 0.15rem 0 0;
+  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+p {
+  margin: 0.25rem 0 0;
+  color: #667085;
+  font-size: 0.86rem;
+}
+
+dl {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+dt {
+  color: #667085;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0.12rem 0 0;
+  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.password-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 860px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}

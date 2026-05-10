@@ -19,6 +19,7 @@ import {
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { PagedResponse } from '../../common/interfaces/paged-response.interface';
 import { ApplicationResponse } from './interfaces/application-response.interface';
+import { ComplianceChecklistResponse } from './interfaces/compliance-checklist.interface';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,6 +50,14 @@ export class ApplicationsController {
     @Param('id') id: string,
   ): Promise<ApplicationResponse> {
     return this.applicationsService.get(user, id);
+  }
+
+  @Get(':id/compliance')
+  async compliance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ): Promise<ComplianceChecklistResponse> {
+    return this.applicationsService.compliance(user, id);
   }
 
   @Roles(UserRole.APPLICANT)

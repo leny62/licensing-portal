@@ -6,31 +6,30 @@
   display: grid;
   min-height: 100vh;
   place-items: center;
-  background:
-    linear-gradient(120deg, rgb(33 55 105 / 7%), transparent 36%),
-    linear-gradient(300deg, rgb(226 151 0 / 8%), transparent 34%), #f9fafb;
+  background: #f9fafb;
   padding: 2rem;
 }
 
 .login-shell {
   display: grid;
-  width: min(980px, 100%);
-  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.78fr);
+  width: min(920px, 100%);
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.85fr);
   overflow: hidden;
   border: 1px solid #dfe6f1;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #fff;
   box-shadow:
-    0 28px 70px rgb(15 23 42 / 10%),
+    0 18px 44px rgb(15 23 42 / 8%),
     0 1px 2px rgb(15 23 42 / 4%);
 }
 
-.assurance-panel {
+.institution-panel {
   display: flex;
-  min-height: 520px;
+  min-height: 500px;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(145deg, rgb(33 55 105 / 96%), rgb(33 55 105 / 88%)), #213769;
+  border-right: 1px solid rgb(255 255 255 / 10%);
+  background: #213769;
   color: #fff;
   padding: 2rem;
 }
@@ -55,7 +54,7 @@
 
 .brand-kicker,
 .eyebrow,
-.assurance-copy p,
+.portal-summary p,
 .signin-heading p {
   margin: 0;
 }
@@ -70,7 +69,7 @@
 }
 
 .brand-row h1,
-.assurance-copy h2,
+.portal-summary h2,
 .signin-heading h2 {
   margin: 0;
   letter-spacing: 0;
@@ -82,14 +81,14 @@
   font-weight: 750;
 }
 
-.assurance-copy {
-  max-width: 28rem;
+.portal-summary {
+  max-width: 26rem;
 
   h2 {
     margin-top: 0.7rem;
-    font-size: 2.25rem;
+    font-size: 2rem;
     font-weight: 750;
-    line-height: 1.06;
+    line-height: 1.1;
   }
 
   p:not(.eyebrow) {
@@ -100,33 +99,23 @@
   }
 }
 
-.assurance-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-
-  div {
-    min-height: 82px;
-    border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 12px;
-    background: rgb(255 255 255 / 8%);
-    padding: 0.85rem;
-  }
-
-  mat-icon {
-    width: 21px;
-    height: 21px;
-    color: #f0b234;
-    font-size: 21px;
-  }
+.access-note {
+  max-width: 25rem;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+  padding-top: 1rem;
 
   span {
     display: block;
-    margin-top: 0.55rem;
-    color: rgb(255 255 255 / 82%);
-    font-size: 0.78rem;
+    color: #fff;
+    font-size: 0.82rem;
     font-weight: 700;
-    line-height: 1.25;
+  }
+
+  p {
+    margin: 0.35rem 0 0;
+    color: rgb(255 255 255 / 68%);
+    font-size: 0.82rem;
+    line-height: 1.45;
   }
 }
 
@@ -162,6 +151,19 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.forgot-link {
+  justify-self: start;
+  color: #213769;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
 }
 
 .error-message {
@@ -206,15 +208,11 @@
     grid-template-columns: 1fr;
   }
 
-  .assurance-panel {
-    min-height: 340px;
+  .institution-panel {
+    min-height: 320px;
   }
 
-  .assurance-copy h2 {
-    font-size: 1.75rem;
-  }
-
-  .assurance-grid {
-    grid-template-columns: 1fr;
+  .portal-summary h2 {
+    font-size: 1.65rem;
   }
 }

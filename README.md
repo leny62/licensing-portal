@@ -1,6 +1,6 @@
 # Licensing Portal
 
-Bank licensing and compliance portal for the National Bank of Rwanda. Replaces the manual, email-and-spreadsheet licensing process with an end-to-end workflow that has authenticated roles, a defined state machine, an append-only audit trail, and versioned document handling.
+Bank licensing and compliance portal for the National Bank of Rwanda. Replaces the manual, email-and-spreadsheet licensing process with an end-to-end workflow that has authenticated roles, a defined state machine, a Rwanda bank-licensing completeness checklist, an append-only audit trail, operational system logs, and versioned document handling.
 
 Monorepo, npm workspaces.
 
@@ -62,12 +62,13 @@ Run Prisma and start the API:
 ```bash
 npm run prisma:migrate
 npm run prisma:generate
+npm run prisma:seed
 npm run api:dev
 ```
 
 API on `http://localhost:3000/api/v1`. OpenAPI at `http://localhost:3000/api/docs`.
 
-Seed local demo data:
+Seed local demo data again whenever you need to reset consumed MFA recovery codes or demo records:
 
 ```bash
 npm run prisma:seed
@@ -83,6 +84,8 @@ admin@licensing.local
 ```
 
 The default password is `LocalPass123!`. Reviewer, approver, and admin logins require MFA; use the seeded recovery code `LOCAL-RECOVERY-0001`. Run `npm run prisma:seed` again to reset consumed recovery codes.
+
+The API enforces the regulatory checklist on submit and resubmit. Drafts can be saved while incomplete, but applicants must upload the blocking evidence from the checklist before the application can move forward.
 
 ## Web
 
@@ -120,24 +123,29 @@ Frontend notes:
 - Access tokens are held in memory only.
 - Web refresh tokens use `sessionStorage`.
 - Electron refresh tokens use the preload `secureStore` bridge.
-- Document upload/download UI is disabled until the backend document controller routes are wired.
+- Document upload/download is available on application detail pages for authorised roles.
+- The application detail page shows the regulatory completeness checklist returned by the API.
 
 ## Tests
 
 ```bash
+npm run prisma:validate
 npm run api:test
+npm run api:build
+npm run web:build
 npm run web:test
 npm run test
 ```
 
 Coverage is gated at 90% line and branch on the repo, with 95% line on the high-risk modules (state machine, audit, auth).
 
-## Operator scripts
+## Audit and logs
 
-- `npm run verify:audit-chain --workspace api` — recompute every audit entry hash and report divergences.
-- `npm run rotate:jwt-key --workspace api` — provision the next JWT signing key and advance the active kid.
-- `npm run rotate:kek --workspace api` — re-wrap every document DEK under a new KEK.
-- `npm run revoke:refresh-tokens --workspace api` — revoke a single user's tokens or the whole table.
+- Application audit is legal-evidence oriented: create draft, update draft, document upload, and every workflow transition are written to the append-only `application_audit` chain.
+- The audit chain is protected by database grants, a mutation-blocking trigger, and hash chaining.
+- System logs are operational telemetry for administrators: request outcome, user, URL, request ID, logger, host address, browser, server name, code, device ID, process/thread, business layer, and application name.
+- System logs are searchable, filterable, exportable as CSV, and append-only at database role level, but they do not replace the application audit chain.
+- If `/api/v1/system-logs` reports a migration-required error, run `npm run prisma:migrate`.
 
 ## Health and observability
 

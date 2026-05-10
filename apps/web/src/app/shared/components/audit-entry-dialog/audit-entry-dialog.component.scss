@@ -1,0 +1,137 @@
+:host {
+  display: block;
+}
+
+.audit-dialog {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem;
+}
+
+header {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.title-mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #213769, #2e4a85);
+  color: #fff;
+  box-shadow: 0 14px 24px rgb(33 55 105 / 22%);
+}
+
+header p,
+.summary-panel span,
+.detail-grid dt,
+.justification-panel span,
+.hash-panel span,
+.payload-panel span {
+  margin: 0;
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+header h2 {
+  margin: 0.05rem 0 0;
+  color: #101828;
+  font-size: 1.15rem;
+  font-weight: 850;
+}
+
+header div:last-child > span {
+  display: inline-flex;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.24rem 0.56rem;
+}
+
+.summary-panel,
+.detail-grid,
+.hash-panel {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.summary-panel {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-panel div,
+.detail-grid div,
+.justification-panel,
+.hash-panel div,
+.payload-panel {
+  min-width: 0;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+  padding: 0.75rem;
+}
+
+.summary-panel strong,
+.detail-grid dd {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 0.25rem;
+  color: #111827;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-grid dd {
+  margin-left: 0;
+}
+
+.justification-panel p {
+  margin: 0.35rem 0 0;
+  color: #344054;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.hash-panel code,
+.payload-panel pre {
+  display: block;
+  overflow: auto;
+  margin: 0.35rem 0 0;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  padding: 0.75rem;
+}
+
+.payload-panel pre {
+  max-height: 260px;
+  white-space: pre-wrap;
+}
+
+footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+  .summary-panel,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

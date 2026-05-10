@@ -41,5 +41,8 @@ export interface AuditChainDivergence {
 
 export interface AuditChainVerificationResult {
   valid: boolean;
+  checkedEntries: number;
+  divergenceAtEntryId?: string;
+  reason?: string;
   divergence?: AuditChainDivergence;
 }
