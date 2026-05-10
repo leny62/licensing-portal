@@ -1,0 +1,25 @@
+{
+  "name": "licensing-portal",
+  "private": true,
+  "version": "0.0.0",
+  "description": "bank licensing and compliance portal",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api:dev":     "npm run start:dev --workspace api",
+    "api:build":   "npm run build --workspace api",
+    "api:test":    "npm test --workspace api",
+    "api:lint":    "npm run lint --workspace api",
+    "api:migrate": "npm run db:migrate --workspace api",
+    "api:seed":    "npm run db:seed --workspace api",
+    "lint":        "npm run lint --workspaces --if-present",
+    "test":        "npm test --workspaces --if-present",
+    "build":       "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
