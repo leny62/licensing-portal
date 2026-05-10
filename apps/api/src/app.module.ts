@@ -8,7 +8,10 @@ import { LoggerModule } from 'nestjs-pino';
 import { configuration } from './config/configuration';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
+import { AuditModule } from './infra/audit/audit.module';
+import { KeysModule } from './infra/keys/keys.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
+import { StorageModule } from './infra/storage/storage.module';
 
 const redactedLogPaths = [
   'req.headers.authorization',
@@ -55,6 +58,9 @@ const redactedLogPaths = [
         limit: Number(process.env.RATE_LIMIT_LIMIT ?? 100),
       },
     ]),
+    KeysModule,
+    StorageModule,
+    AuditModule,
     PrismaModule,
   ],
   providers: [

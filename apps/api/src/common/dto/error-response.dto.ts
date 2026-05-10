@@ -1,16 +1,8 @@
-export interface ErrorDetail {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-  correlationId: string;
-}
-
-export interface ErrorResponseDto {
-  error: ErrorDetail;
-}
+import { ErrorCode } from '../enums/error-code.enum';
+import { ErrorResponseDto } from '../interfaces/error-response.interface';
 
 export const buildErrorResponse = (
-  code: string,
+  code: ErrorCode,
   message: string,
   correlationId: string,
   details?: Record<string, unknown>,

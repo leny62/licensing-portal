@@ -1,0 +1,33 @@
+model Application {
+  id              String                @id @default(uuid()) @db.Uuid
+  referenceNumber String                @unique @default(dbgenerated("next_application_reference()")) @map("reference_number")
+  applicantId     String                @map("applicant_id") @db.Uuid
+  institutionName String                @map("institution_name")
+  legalForm       String                @map("legal_form")
+  country         String
+  contactPerson   String                @map("contact_person")
+  contactEmail    String                @map("contact_email")
+  contactPhone    String                @map("contact_phone")
+  summary         String
+  state           ApplicationState      @default(DRAFT)
+  rowVersion      Int                   @default(0) @map("row_version")
+  reviewerId      String?               @map("reviewer_id") @db.Uuid
+  approverId      String?               @map("approver_id") @db.Uuid
+  submittedAt     DateTime?             @map("submitted_at") @db.Timestamptz(3)
+  lastResubmitAt  DateTime?             @map("last_resubmit_at") @db.Timestamptz(3)
+  decidedAt       DateTime?             @map("decided_at") @db.Timestamptz(3)
+  justification   String?
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  applicant       User                  @relation("ApplicantApplications", fields: [applicantId], references: [id], onDelete: Restrict)
+  reviewer        User?                 @relation("ReviewerApplications", fields: [reviewerId], references: [id], onDelete: Restrict)
+  approver        User?                 @relation("ApproverApplications", fields: [approverId], references: [id], onDelete: Restrict)
+  documents       ApplicationDocument[]
+  auditEntries    ApplicationAudit[]
+  notifications   Notification[]
+
+  @@index([applicantId])
+  @@index([state])
+  @@index([reviewerId])
+  @@map("applications")
+}
