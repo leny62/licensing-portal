@@ -52,6 +52,7 @@ export class ApplicationsService {
         data: {
           applicantId: actor.id,
           institutionName: dto.institutionName,
+          ...(dto.applicationKind !== undefined ? { applicationKind: dto.applicationKind } : {}),
           bankCategory: dto.bankCategory,
           paidUpCapitalRwf: dto.paidUpCapitalRwf,
           legalForm: dto.legalForm,
@@ -71,6 +72,7 @@ export class ApplicationsService {
         payload: {
           referenceNumber: application.referenceNumber,
           institutionName: application.institutionName,
+          applicationKind: application.applicationKind,
           bankCategory: application.bankCategory,
           paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
         },
@@ -449,7 +451,17 @@ export class ApplicationsService {
       orderBy: [{ slot: 'asc' }, { version: 'desc' }],
     });
 
-    return buildComplianceChecklist(application, documents);
+    return buildComplianceChecklist(
+      {
+        id: application.id,
+        referenceNumber: application.referenceNumber,
+        applicationKind: application.applicationKind,
+        bankCategory: application.bankCategory,
+        paidUpCapitalRwf: application.paidUpCapitalRwf,
+        country: application.country,
+      },
+      documents,
+    );
   }
 
   private async assertComplianceReady(actor: AuthenticatedUser, id: string): Promise<void> {
@@ -487,6 +499,7 @@ export class ApplicationsService {
       referenceNumber: application.referenceNumber,
       applicantId: application.applicantId,
       institutionName: application.institutionName,
+      applicationKind: application.applicationKind,
       bankCategory: application.bankCategory,
       paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
       legalForm: application.legalForm,

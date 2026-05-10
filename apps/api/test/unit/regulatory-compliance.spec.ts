@@ -1,19 +1,21 @@
-import { BankCategory, Prisma } from '@prisma/client';
+import { ApplicationKind, BankCategory, Prisma } from '@prisma/client';
 
 import { ComplianceCheckStatus } from '../../src/modules/applications/enums/compliance-check-status.enum';
 import { buildComplianceChecklist } from '../../src/modules/applications/regulatory-compliance';
 import { DocumentSlot } from '../../src/modules/documents/enums/document-slot.enum';
 
+const baseApp = {
+  id: 'application-1',
+  referenceNumber: 'APP-1',
+  applicationKind: ApplicationKind.NEW_BANK,
+  bankCategory: BankCategory.COMMERCIAL_BANK,
+  country: 'Rwanda',
+};
+
 describe('regulatory compliance checklist', () => {
   it('flags missing Article 11 documents as blocking', () => {
     const checklist = buildComplianceChecklist(
-      {
-        id: 'application-1',
-        referenceNumber: 'APP-1',
-        bankCategory: BankCategory.COMMERCIAL_BANK,
-        paidUpCapitalRwf: new Prisma.Decimal(20000000000),
-        country: 'Rwanda',
-      },
+      { ...baseApp, paidUpCapitalRwf: new Prisma.Decimal(20000000000) },
       [{ id: 'doc-1', slot: DocumentSlot.BusinessPlan, version: 1 }],
     );
 
@@ -26,24 +28,18 @@ describe('regulatory compliance checklist', () => {
     ).toBe(ComplianceCheckStatus.Complete);
   });
 
-  it('requires foreign bank supervisory evidence only for foreign applicants', () => {
+  it('requires foreign bank supervisory evidence only for FOREIGN_SUBSIDIARY kind', () => {
     const localChecklist = buildComplianceChecklist(
-      {
-        id: 'application-1',
-        referenceNumber: 'APP-1',
-        bankCategory: BankCategory.COMMERCIAL_BANK,
-        paidUpCapitalRwf: '20000000000',
-        country: 'RW',
-      },
+      { ...baseApp, applicationKind: ApplicationKind.NEW_BANK, paidUpCapitalRwf: '20000000000' },
       [],
     );
     const foreignChecklist = buildComplianceChecklist(
       {
+        ...baseApp,
         id: 'application-2',
         referenceNumber: 'APP-2',
-        bankCategory: BankCategory.COMMERCIAL_BANK,
+        applicationKind: ApplicationKind.FOREIGN_SUBSIDIARY,
         paidUpCapitalRwf: '20000000000',
-        country: 'Kenya',
       },
       [],
     );
@@ -60,17 +56,26 @@ describe('regulatory compliance checklist', () => {
 
   it('flags category-specific capital gaps', () => {
     const checklist = buildComplianceChecklist(
-      {
-        id: 'application-1',
-        referenceNumber: 'APP-1',
-        bankCategory: BankCategory.DEVELOPMENT_BANK,
-        paidUpCapitalRwf: 49999999999,
-        country: 'Rwanda',
-      },
+      { ...baseApp, bankCategory: BankCategory.DEVELOPMENT_BANK, paidUpCapitalRwf: 49999999999 },
       [],
     );
 
     expect(checklist.requiredPaidUpCapitalRwf).toBe(50000000000);
     expect(checklist.sections[0]?.items[0]?.status).toBe(ComplianceCheckStatus.Missing);
+  });
+
+  it('marks foreign-bank supervision not-applicable for REPRESENTATIVE_OFFICE kind', () => {
+    const checklist = buildComplianceChecklist(
+      {
+        ...baseApp,
+        applicationKind: ApplicationKind.REPRESENTATIVE_OFFICE,
+        paidUpCapitalRwf: '20000000000',
+      },
+      [],
+    );
+
+    expect(
+      checklist.sections.find((s) => s.id === 'foreign-bank-supervision')!.items[0]?.status,
+    ).toBe(ComplianceCheckStatus.NotApplicable);
   });
 });

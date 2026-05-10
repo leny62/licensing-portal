@@ -1,4 +1,4 @@
-import { BankCategory, Prisma } from '@prisma/client';
+import { ApplicationKind, BankCategory, Prisma } from '@prisma/client';
 
 import { DocumentSlot } from '../documents/enums/document-slot.enum';
 import { ComplianceCheckStatus } from './enums/compliance-check-status.enum';
@@ -14,6 +14,7 @@ import { meetsMinimumPaidUpCapital, requiredPaidUpCapitalRwf } from './capital-r
 export interface ComplianceApplicationInput {
   id: string;
   referenceNumber: string;
+  applicationKind: ApplicationKind;
   bankCategory: BankCategory;
   paidUpCapitalRwf: Prisma.Decimal | string | number;
   country: string;
@@ -142,7 +143,7 @@ export const buildComplianceChecklist = (
 ): ComplianceChecklistResponse => {
   const requiredCapital = requiredPaidUpCapitalRwf(application.bankCategory);
   const paidUpCapital = Number(application.paidUpCapitalRwf.toString());
-  const foreignApplicant = !['rwanda', 'rw'].includes(application.country.trim().toLowerCase());
+  const foreignApplicant = application.applicationKind === ApplicationKind.FOREIGN_SUBSIDIARY;
   const sections: ComplianceChecklistSection[] = [
     {
       id: 'capital',

@@ -1,3 +1,9 @@
+enum ApplicationKind {
+  NEW_BANK
+  FOREIGN_SUBSIDIARY
+  REPRESENTATIVE_OFFICE
+}
+
 enum UserRole {
   APPLICANT
   REVIEWER
