@@ -1,0 +1,27 @@
+model SystemLog {
+  id              String         @id @default(uuid()) @db.Uuid
+  occurredAt      DateTime       @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  userId          String?        @map("user_id") @db.Uuid
+  userName        String?        @map("user_name")
+  level           SystemLogLevel
+  method          String?
+  url             String
+  message         String
+  requestId       String?        @map("request_id")
+  exception       String?
+  logger          String?
+  hostAddress     String?        @map("host_address")
+  browser         String?
+  serverName      String?        @map("server_name")
+  code            String?
+  deviceId        String?        @map("device_id")
+  thread          String?
+  businessLayer   String?        @map("business_layer")
+  applicationName String         @default("Licensing Portal API") @map("application_name")
+  user            User?          @relation("SystemLogUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([occurredAt])
+  @@index([level, occurredAt])
+  @@index([userId, occurredAt])
+  @@map("system_logs")
+}

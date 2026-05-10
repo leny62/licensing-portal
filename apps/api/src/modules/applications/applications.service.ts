@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Application, ApplicationState, Prisma, UserRole } from '@prisma/client';
 
 import { ResourceNotFoundError, VersionConflictError } from '../../common/errors/domain.errors';
+import { PagedResponse } from '../../common/interfaces/paged-response.interface';
 import { AuditService } from '../../infra/audit/audit.service';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
@@ -48,19 +49,40 @@ export class ApplicationsService {
   async list(
     actor: AuthenticatedUser,
     query: ListApplicationsQueryDto,
-  ): Promise<ApplicationResponse[]> {
-    const applications = await this.prisma.application.findMany({
-      where: {
-        ...this.roleScopedWhere(actor),
-        ...(query.state !== undefined ? { state: query.state } : {}),
-        ...(query.reviewerId !== undefined ? { reviewerId: query.reviewerId } : {}),
-        ...(query.q !== undefined ? { referenceNumber: { contains: query.q } } : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    });
+  ): Promise<PagedResponse<ApplicationResponse>> {
+    const page = query.page ?? 0;
+    const size = query.size ?? 20;
 
-    return applications.map((application) => this.mapApplication(application));
+    const where: Prisma.ApplicationWhereInput = {
+      ...this.roleScopedWhere(actor),
+      ...(query.state !== undefined && query.state.length > 0
+        ? { state: { in: query.state } }
+        : {}),
+      ...(query.reviewerId !== undefined ? { reviewerId: query.reviewerId } : {}),
+      ...(query.q !== undefined
+        ? {
+            OR: [
+              { referenceNumber: { contains: query.q, mode: 'insensitive' } },
+              { institutionName: { contains: query.q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, applications] = await this.prisma.$transaction([
+      this.prisma.application.count({ where }),
+      this.prisma.application.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: page * size,
+        take: size,
+      }),
+    ]);
+
+    return {
+      data: applications.map((a) => this.mapApplication(a)),
+      meta: { page, size, total, totalPages: Math.max(Math.ceil(total / size), 1) },
+    };
   }
 
   async get(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {

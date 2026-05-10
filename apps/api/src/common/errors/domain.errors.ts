@@ -100,3 +100,8 @@ export class ConflictError extends DomainError {
   readonly code = ErrorCode.Conflict;
   readonly httpStatus = 409;
 }
+
+export class MigrationRequiredError extends DomainError {
+  readonly code = ErrorCode.MigrationRequired;
+  readonly httpStatus = 503;
+}

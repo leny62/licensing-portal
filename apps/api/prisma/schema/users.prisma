@@ -15,6 +15,7 @@ model User {
   approvedItems     Application[]         @relation("ApproverApplications")
   uploadedDocuments ApplicationDocument[] @relation("UploadedDocuments")
   auditEntries      ApplicationAudit[]    @relation("AuditActor")
+  systemLogs        SystemLog[]           @relation("SystemLogUser")
   mfaSecret         UserMfaSecret?
   mfaRecoveryCodes  UserMfaRecoveryCode[]
   refreshTokens     RefreshToken[]

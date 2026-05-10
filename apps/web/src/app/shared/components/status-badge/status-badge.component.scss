@@ -1,0 +1,90 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.25rem 0.65rem 0.25rem 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-neutral {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+
+  .status-dot {
+    background: #9ca3af;
+  }
+}
+
+.status-amber {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+
+  .status-dot {
+    background: #f59e0b;
+  }
+}
+
+.status-blue {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+
+  .status-dot {
+    background: #3b82f6;
+  }
+}
+
+.status-green {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+
+  .status-dot {
+    background: #22c55e;
+  }
+}
+
+.status-red {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+
+  .status-dot {
+    background: #ef4444;
+  }
+}
+
+.status-purple {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+  color: #6d28d9;
+
+  .status-dot {
+    background: #8b5cf6;
+  }
+}
+
+.status-teal {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+
+  .status-dot {
+    background: #14b8a6;
+  }
+}

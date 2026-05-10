@@ -1,0 +1,26 @@
+<aside class="nav-shell">
+  <div class="brand">
+    <div class="brand-mark">BL</div>
+    <div>
+      <p class="brand-title">Licensing Portal</p>
+      <p class="brand-subtitle">Compliance workspace</p>
+    </div>
+  </div>
+
+  <nav class="nav-links" aria-label="Primary">
+    @for (item of items(); track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  @if (user(); as currentUser) {
+    <div class="user-panel">
+      <p class="truncate text-sm font-semibold text-gray-900">{{ currentUser.email }}</p>
+      <p class="text-xs text-gray-500">{{ currentUser.role }}</p>
+      <app-button variant="ghost" icon="logout" (click)="logout()">Sign out</app-button>
+    </div>
+  }
+</aside>

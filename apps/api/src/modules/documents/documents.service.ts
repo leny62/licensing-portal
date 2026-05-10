@@ -1,5 +1,5 @@
-import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
-import { ApplicationDocument, ApplicationState } from '@prisma/client';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ApplicationDocument, ApplicationState, UserRole } from '@prisma/client';
 
 import { ConflictError, ResourceNotFoundError } from '../../common/errors/domain.errors';
 import { PrismaService } from '../../infra/prisma/prisma.service';
@@ -8,6 +8,7 @@ import { DocumentStorage } from '../../infra/storage/interfaces/document-storage
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import {
   ApplicationDocumentResponse,
+  DownloadResult,
   UploadDocumentInput,
 } from './interfaces/document-response.interface';
 import { prepareDocumentUploadStream } from './upload-stream';
@@ -79,13 +80,65 @@ export class DocumentsService {
     }
   }
 
-  async list(applicationId: string): Promise<ApplicationDocumentResponse[]> {
+  async list(
+    actor: AuthenticatedUser,
+    applicationId: string,
+  ): Promise<ApplicationDocumentResponse[]> {
+    await this.verifyApplicationAccess(actor, applicationId);
+
     const documents = await this.prisma.applicationDocument.findMany({
       where: { applicationId },
       orderBy: [{ slot: 'asc' }, { version: 'desc' }],
     });
 
     return documents.map((document) => this.mapDocument(document));
+  }
+
+  async download(actor: AuthenticatedUser, documentId: string): Promise<DownloadResult> {
+    const document = await this.prisma.applicationDocument.findUnique({
+      where: { id: documentId },
+    });
+
+    if (document === null) {
+      throw new ResourceNotFoundError('Document not found.');
+    }
+
+    await this.verifyApplicationAccess(actor, document.applicationId);
+
+    const stream = this.documentStorage.get(document.storagePath, {
+      wrappedDek: document.wrappedDek,
+      iv: document.iv,
+      authTag: document.authTag,
+    });
+
+    return {
+      stream,
+      mimeType: document.mimeType,
+      originalFilename: document.originalFilename,
+      sizeBytes: document.sizeBytes,
+    };
+  }
+
+  private async verifyApplicationAccess(
+    actor: AuthenticatedUser,
+    applicationId: string,
+  ): Promise<void> {
+    if (actor.role !== UserRole.APPLICANT) {
+      return;
+    }
+
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      select: { applicantId: true },
+    });
+
+    if (application === null) {
+      throw new ResourceNotFoundError('Application not found.');
+    }
+
+    if (application.applicantId !== actor.id) {
+      throw new ForbiddenException();
+    }
   }
 
   private mapDocument(document: ApplicationDocument): ApplicationDocumentResponse {

@@ -84,10 +84,50 @@ admin@licensing.local
 
 The default password is `LocalPass123!`. Reviewer, approver, and admin logins require MFA; use the seeded recovery code `LOCAL-RECOVERY-0001`. Run `npm run prisma:seed` again to reset consumed recovery codes.
 
+## Web
+
+Start the backend first, then run the Angular frontend:
+
+```bash
+npm run web:dev
+```
+
+Web app on `http://127.0.0.1:4200`. The Angular dev server proxies `/api` to `http://127.0.0.1:3000`, so keep `npm run api:dev` running in another terminal.
+
+Useful frontend commands:
+
+```bash
+npm run web:build
+npm run web:test
+npm run web:lint
+npm run web:e2e
+```
+
+Run the Electron desktop shell against the Angular dev server:
+
+```bash
+npm run desktop:dev
+```
+
+Package the desktop app:
+
+```bash
+npm run desktop:package
+```
+
+Frontend notes:
+
+- Access tokens are held in memory only.
+- Web refresh tokens use `sessionStorage`.
+- Electron refresh tokens use the preload `secureStore` bridge.
+- Document upload/download UI is disabled until the backend document controller routes are wired.
+
 ## Tests
 
 ```bash
 npm run api:test
+npm run web:test
+npm run test
 ```
 
 Coverage is gated at 90% line and branch on the repo, with 95% line on the high-risk modules (state machine, audit, auth).

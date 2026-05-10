@@ -1,0 +1,247 @@
+.toolbar-controls,
+.filter-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.search-box {
+  display: inline-flex;
+  min-width: min(22rem, 100%);
+  height: 42px;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #d8dee9;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0 0.4rem 0 0.75rem;
+  color: #667085;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+
+  &:focus-within {
+    border-color: #213769;
+    box-shadow: 0 0 0 4px rgb(33 55 105 / 9%);
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #101828;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .search-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: #eef3fb;
+    color: #213769;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease;
+
+    mat-icon {
+      width: 19px;
+      height: 19px;
+      font-size: 19px;
+    }
+
+    &:hover {
+      background: #eef3fb;
+      color: #213769;
+    }
+  }
+
+  .search-clear {
+    width: 30px;
+    height: 30px;
+    color: #667085;
+  }
+}
+
+.filter-trigger,
+.clear-controls {
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #d8dee9;
+  border-radius: 10px;
+  background: #fff;
+  color: #344054;
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+
+  &:hover {
+    border-color: #b0b9c8;
+    background: #f8fafc;
+  }
+}
+
+.filter-trigger {
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    color: #667085;
+    font-size: 18px;
+  }
+
+  &.filter-active {
+    border-color: rgb(33 55 105 / 42%);
+    background: #eef3fb;
+    color: #213769;
+
+    mat-icon {
+      color: #213769;
+    }
+  }
+}
+
+.clear-controls {
+  border-color: transparent;
+  background: #fff7e8;
+  color: #8a5200;
+
+  &:hover {
+    background: #fef3cd;
+  }
+}
+
+.app-table {
+  width: 100%;
+  min-width: 680px;
+
+  th {
+    height: 46px;
+    border-bottom-color: #e5e7eb;
+    background: linear-gradient(180deg, #fbfdff 0%, #f6f8fb 100%);
+    color: #6b7280;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  td {
+    height: 60px;
+    border-bottom-color: #f1f5f9;
+    color: #1f2937;
+    font-size: 0.875rem;
+  }
+
+  tr.mat-mdc-row {
+    transition: background-color 120ms ease;
+
+    &:hover {
+      background: #f8fafc;
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+.cell-text {
+  font-weight: 600;
+}
+
+.date-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+.action-cell {
+  width: 60px;
+  padding-right: 0.75rem !important;
+  text-align: right;
+}
+
+.row-menu-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dfe6f1;
+  border-radius: 8px;
+  background: #fff;
+  color: #213769;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+
+  &:hover {
+    background: #eef3fb;
+    border-color: rgb(33 55 105 / 28%);
+  }
+}
+
+.table-paginator {
+  border-top: 1px solid #edf1f7;
+  background: #fff;
+  color: #344054;
+  font-family: inherit;
+}
+
+:host ::ng-deep {
+  .mat-mdc-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  .mat-mdc-cell,
+  .mat-mdc-header-cell,
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    border-left: none !important;
+    border-right: none !important;
+    outline: none !important;
+  }
+
+  .action-primary mat-icon {
+    color: #213769;
+  }
+
+  .action-success mat-icon {
+    color: #15803d;
+  }
+
+  .action-danger mat-icon {
+    color: #dc2626;
+  }
+}
+
+@media (max-width: 760px) {
+  .toolbar-controls,
+  .search-box {
+    width: 100%;
+  }
+}

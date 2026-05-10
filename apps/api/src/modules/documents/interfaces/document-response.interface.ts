@@ -15,3 +15,10 @@ export interface UploadDocumentInput {
   originalFilename: string;
   stream: NodeJS.ReadableStream;
 }
+
+export interface DownloadResult {
+  stream: NodeJS.ReadableStream;
+  mimeType: string;
+  originalFilename: string;
+  sizeBytes: number;
+}

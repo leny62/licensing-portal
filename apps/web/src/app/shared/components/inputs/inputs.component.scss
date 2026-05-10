@@ -1,0 +1,132 @@
+:host {
+  display: block;
+}
+
+.input-shell {
+  min-width: 0;
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.38rem;
+  color: #344054;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.portal-field {
+  --mdc-outlined-text-field-container-shape: 12px;
+  --mdc-outlined-text-field-outline-color: #d9e0ea;
+  --mdc-outlined-text-field-hover-outline-color: #8190a8;
+  --mdc-outlined-text-field-focus-outline-color: #213769;
+  --mdc-outlined-text-field-input-text-color: #111827;
+  --mat-form-field-container-height: 52px;
+  --mat-form-field-container-vertical-padding: 14px;
+
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 94%) 0%, rgb(248 250 252 / 98%) 100%), #fff;
+      box-shadow:
+        0 1px 2px rgb(15 23 42 / 5%),
+        inset 0 1px 0 rgb(255 255 255 / 80%);
+      transition:
+        border-color 140ms ease,
+        box-shadow 140ms ease,
+        transform 140ms ease;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background: transparent;
+    }
+
+    .mat-mdc-form-field-icon-prefix {
+      align-self: center;
+      color: #51627d;
+      padding-left: 0.8rem;
+      padding-right: 0.45rem;
+
+      mat-icon {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        border-radius: 8px;
+        background: #eef3fb;
+        color: #213769;
+        font-size: 18px;
+      }
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 52px;
+      padding-top: 14px;
+      padding-bottom: 12px;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value {
+      color: #101828;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .mat-mdc-input-element::placeholder {
+      color: #98a2b3;
+      font-weight: 500;
+    }
+
+    .mdc-text-field--focused {
+      box-shadow: 0 0 0 4px rgb(33 55 105 / 9%);
+
+      .mat-mdc-form-field-icon-prefix mat-icon {
+        background: #213769;
+        color: #fff;
+      }
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+  }
+}
+
+.checkbox-card,
+.file-card {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #d9e0ea;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%), #fff;
+  padding: 0.82rem 0.9rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+}
+
+.checkbox-card > mat-icon,
+.file-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  background: #eef3fb;
+  color: #213769;
+}
+
+.checkbox-card p {
+  margin: -0.2rem 0 0 2.6rem;
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.file-card {
+  border-style: dashed;
+  background: linear-gradient(90deg, rgb(33 55 105 / 5%), transparent 54%), #fff;
+}

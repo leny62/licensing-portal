@@ -1,0 +1,73 @@
+<form [formGroup]="form" class="formbuilder-shell" (ngSubmit)="submit()">
+  @if (formName) {
+    <div class="formbuilder-heading">
+      <div class="heading-mark">{{ steps.length }}</div>
+      <div>
+        <h2>{{ formName }}</h2>
+        <p>Complete each section, then review the submission.</p>
+      </div>
+    </div>
+  }
+
+  <mat-stepper orientation="vertical" linear class="portal-stepper">
+    @for (step of steps; track step.title; let stepIndex = $index) {
+      <mat-step [stepControl]="stepGroup(stepIndex)">
+        <ng-template matStepLabel>{{ step.title }}</ng-template>
+
+        <section class="step-panel">
+          <div class="step-header">
+            <div>
+              <p class="step-kicker">Section {{ stepIndex + 1 }}</p>
+              <h3>{{ step.title }}</h3>
+              @if (step.subtitle) {
+                <p>{{ step.subtitle }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="field-grid">
+            @for (field of step.fields; track field.name) {
+              <app-inputs
+                [class.field-wide]="field.cols === 2"
+                [field]="field"
+                [group]="stepGroup(stepIndex)"
+                [formSelectData]="formSelectData"
+              ></app-inputs>
+            }
+          </div>
+
+          <div class="action-bar">
+            @if (stepIndex > 0) {
+              <app-button variant="secondary" icon="arrow_back" matStepperPrevious>Back</app-button>
+            }
+            @if (stepIndex < steps.length - 1) {
+              <app-button variant="primary" icon="arrow_forward" matStepperNext
+                >Continue</app-button
+              >
+            }
+          </div>
+        </section>
+      </mat-step>
+    }
+
+    <mat-step>
+      <ng-template matStepLabel>Review</ng-template>
+      <section class="step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-kicker">Final check</p>
+            <h3>Review and submit</h3>
+            <p>Confirm the details before saving this record.</p>
+          </div>
+        </div>
+        <app-form-summary [steps]="steps" [value]="form.getRawValue()"></app-form-summary>
+        <div class="action-bar">
+          <app-button variant="secondary" icon="arrow_back" matStepperPrevious>Back</app-button>
+          <app-button type="submit" variant="primary" icon="save" [loading]="isLoading">
+            Save
+          </app-button>
+        </div>
+      </section>
+    </mat-step>
+  </mat-stepper>
+</form>

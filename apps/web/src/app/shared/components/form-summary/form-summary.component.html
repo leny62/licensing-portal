@@ -1,0 +1,25 @@
+<div class="summary-shell">
+  @for (step of steps; track step.title; let stepIndex = $index) {
+    <section class="summary-card">
+      <div class="summary-card-header">
+        <span>{{ stepIndex + 1 }}</span>
+        <div>
+          <h3>{{ step.title }}</h3>
+          @if (step.subtitle) {
+            <p>{{ step.subtitle }}</p>
+          }
+        </div>
+      </div>
+      <dl class="summary-grid">
+        @for (field of step.fields; track field.name) {
+          @if (field.visible !== false) {
+            <div class="summary-item">
+              <dt>{{ field.label }}</dt>
+              <dd>{{ display(stepValue(stepIndex)[field.name]) }}</dd>
+            </div>
+          }
+        }
+      </dl>
+    </section>
+  }
+</div>

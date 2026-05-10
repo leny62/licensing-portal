@@ -16,5 +16,6 @@ export enum ErrorCode {
   Forbidden = 'FORBIDDEN',
   NotFound = 'NOT_FOUND',
   RequestFailed = 'REQUEST_FAILED',
+  MigrationRequired = 'MIGRATION_REQUIRED',
   InternalError = 'INTERNAL_ERROR',
 }

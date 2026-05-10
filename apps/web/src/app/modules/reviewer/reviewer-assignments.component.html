@@ -1,0 +1,24 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">My assignments</h1>
+      <p class="page-copy">Applications currently assigned to you.</p>
+    </div>
+  </header>
+
+  @if (hasError) {
+    <app-error-state (retry)="load()"></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="applications"
+      [isLoading]="isLoading"
+      [serverSide]="true"
+      [totalRecords]="totalRecords"
+      [totalPages]="totalPages"
+      (actionClick)="handleAction($event)"
+      (searchChange)="handleSearch($event)"
+      (pageChange)="handlePage($event)"
+    ></app-table>
+  }
+</div>

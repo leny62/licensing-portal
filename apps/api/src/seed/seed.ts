@@ -292,9 +292,33 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
     },
   });
 
+  const recommended = await prisma.application.upsert({
+    where: { referenceNumber: 'APP-SEED-RECOMMENDED' },
+    update: {},
+    create: {
+      referenceNumber: 'APP-SEED-RECOMMENDED',
+      applicantId: applicant.id,
+      reviewerId: reviewer.id,
+      institutionName: 'East Africa Microfinance Ltd',
+      legalForm: 'Limited Company',
+      country: 'RW',
+      contactPerson: 'Aline Applicant',
+      contactEmail: applicant.email,
+      contactPhone: '+250788000003',
+      summary: 'Application reviewed and recommended for approval; awaiting final decision.',
+      state: ApplicationState.RECOMMENDED_FOR_APPROVAL,
+      rowVersion: 3,
+      submittedAt: new Date(),
+    },
+  });
+
   await createDocumentIfMissing(draft.id, applicant.id, 'BUSINESS_PLAN', 1);
   await createDocumentIfMissing(underReview.id, applicant.id, 'BUSINESS_PLAN', 1);
   await createDocumentIfMissing(underReview.id, applicant.id, 'BUSINESS_PLAN', 2);
+  await createDocumentIfMissing(underReview.id, applicant.id, 'FINANCIAL_STATEMENTS', 1);
+  await createDocumentIfMissing(recommended.id, applicant.id, 'BUSINESS_PLAN', 1);
+  await createDocumentIfMissing(recommended.id, applicant.id, 'FINANCIAL_STATEMENTS', 1);
+  await createDocumentIfMissing(recommended.id, applicant.id, 'INCORPORATION_CERTIFICATE', 1);
   await createApplicationAuditIfMissing(draft.id, applicant.id, 'seed_draft_created', draft.state);
   await createApplicationAuditIfMissing(
     underReview.id,
@@ -307,6 +331,24 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
     reviewer.id,
     'seed_application_claimed',
     underReview.state,
+  );
+  await createApplicationAuditIfMissing(
+    recommended.id,
+    applicant.id,
+    'seed_application_submitted',
+    ApplicationState.SUBMITTED,
+  );
+  await createApplicationAuditIfMissing(
+    recommended.id,
+    reviewer.id,
+    'seed_application_claimed',
+    ApplicationState.UNDER_REVIEW,
+  );
+  await createApplicationAuditIfMissing(
+    recommended.id,
+    reviewer.id,
+    'seed_application_recommended',
+    recommended.state,
   );
 
   const existingNotification = await prisma.notification.findFirst({
@@ -326,6 +368,29 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
         payload: { referenceNumber: underReview.referenceNumber, seeded: true },
       },
     });
+  }
+
+  const approver = users.get(UserRole.APPROVER);
+
+  if (approver !== undefined) {
+    const existingApproverNotification = await prisma.notification.findFirst({
+      where: {
+        userId: approver.id,
+        applicationId: recommended.id,
+        type: NotificationType.RECOMMENDATION_READY,
+      },
+    });
+
+    if (existingApproverNotification === null) {
+      await prisma.notification.create({
+        data: {
+          userId: approver.id,
+          applicationId: recommended.id,
+          type: NotificationType.RECOMMENDATION_READY,
+          payload: { referenceNumber: recommended.referenceNumber, seeded: true },
+        },
+      });
+    }
   }
 };
 

@@ -30,3 +30,10 @@ enum NotificationType {
   FINAL_DECISION
   RECOMMENDATION_READY
 }
+
+enum SystemLogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
