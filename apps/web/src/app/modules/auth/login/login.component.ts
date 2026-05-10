@@ -23,8 +23,8 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   readonly form = this.fb.nonNullable.group({
-    email: ['applicant@licensing.local', [Validators.required, Validators.email]],
-    password: ['LocalPass123!', [Validators.required, Validators.minLength(8)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
   readonly emailField: FieldConfig = {

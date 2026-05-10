@@ -27,6 +27,18 @@
           <h2 class="text-sm font-semibold text-gray-900">Application summary</h2>
           <dl class="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Bank category</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                {{ bankCategoryLabel(application.bankCategory) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Paid-up capital</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                {{ formattedRwf(application.paidUpCapitalRwf) }}
+              </dd>
+            </div>
+            <div>
               <dt class="text-xs font-medium uppercase text-gray-500">Legal form</dt>
               <dd class="mt-1 text-sm text-gray-900">{{ application.legalForm }}</dd>
             </div>
@@ -47,13 +59,84 @@
         </section>
 
         <section class="surface p-5">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-semibold text-gray-900">Regulatory completeness</h2>
+              <p class="mt-1 text-sm text-gray-500">{{ complianceProgressLabel() }}</p>
+            </div>
+            @if (compliance !== null && compliance.summary.blockingMissing > 0) {
+              <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                {{ compliance.summary.blockingMissing }} blocking gap{{
+                  compliance.summary.blockingMissing === 1 ? '' : 's'
+                }}
+              </span>
+            }
+          </div>
+
+          @if (complianceLoading) {
+            <div class="mt-4">
+              <app-loading-state label="Checking licensing evidence"></app-loading-state>
+            </div>
+          } @else if (complianceError || compliance === null) {
+            <p
+              class="mt-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
+              Unable to load the regulatory checklist.
+            </p>
+          } @else {
+            <div class="mt-5 space-y-5">
+              @for (section of compliance.sections; track section.id) {
+                <div>
+                  <h3 class="text-xs font-semibold uppercase text-gray-500">
+                    {{ section.title }}
+                  </h3>
+                  <div class="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+                    @for (item of section.items; track item.id) {
+                      <div class="grid gap-3 p-3 md:grid-cols-[1fr_auto]">
+                        <div class="min-w-0">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <p class="text-sm font-semibold text-gray-900">{{ item.title }}</p>
+                            @if (item.blocking) {
+                              <span
+                                class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-slate-600"
+                              >
+                                Required
+                              </span>
+                            }
+                          </div>
+                          <p class="mt-1 text-sm leading-6 text-gray-600">
+                            {{ item.description }}
+                          </p>
+                          <p class="mt-2 text-xs text-gray-500">
+                            {{ evidenceLabel(item) }}
+                          </p>
+                          <p class="mt-1 text-xs font-medium text-gray-400">
+                            {{ item.regulatoryBasis }}
+                          </p>
+                        </div>
+                        <div class="md:justify-self-end">
+                          <app-status-badge [state]="item.status"></app-status-badge>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="surface p-5">
           <div class="flex items-start justify-between gap-4">
             <h2 class="text-sm font-semibold text-gray-900">Documents</h2>
             @if (canUpload()) {
               <div class="flex items-center gap-2">
-                <mat-form-field appearance="outline" class="!text-xs" style="width:220px">
+                <mat-form-field appearance="outline" class="!text-xs" style="width: 220px">
                   <mat-label>Slot</mat-label>
-                  <mat-select [value]="selectedSlot" (selectionChange)="selectedSlot = $event.value">
+                  <mat-select
+                    [value]="selectedSlot"
+                    (selectionChange)="selectedSlot = $event.value"
+                  >
                     @for (slot of documentSlots; track slot) {
                       <mat-option [value]="slot">{{ slotLabel(slot) }}</mat-option>
                     }
@@ -64,7 +147,8 @@
                   icon="upload"
                   [loading]="uploadLoading"
                   (click)="openFilePicker()"
-                >Upload</app-button>
+                  >Upload</app-button
+                >
                 <input
                   #fileInput
                   type="file"
@@ -82,8 +166,14 @@
               @for (doc of documents; track doc.id) {
                 <li class="flex items-center justify-between gap-3 py-2">
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-medium text-gray-900">{{ slotLabel(doc.slot) }} <span class="font-normal text-gray-500">v{{ doc.version }}</span></p>
-                    <p class="truncate text-xs text-gray-500">{{ doc.originalFilename }} · {{ formattedSize(doc.sizeBytes) }} · {{ formatted(doc.createdAt) }}</p>
+                    <p class="truncate text-sm font-medium text-gray-900">
+                      {{ slotLabel(doc.slot) }}
+                      <span class="font-normal text-gray-500">v{{ doc.version }}</span>
+                    </p>
+                    <p class="truncate text-xs text-gray-500">
+                      {{ doc.originalFilename }} · {{ formattedSize(doc.sizeBytes) }} ·
+                      {{ formatted(doc.createdAt) }}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -91,7 +181,7 @@
                     aria-label="Download document"
                     (click)="downloadDocument(doc.id, doc.originalFilename)"
                   >
-                    <mat-icon style="font-size:18px;width:18px;height:18px">download</mat-icon>
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px">download</mat-icon>
                   </button>
                 </li>
               }
@@ -108,7 +198,9 @@
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                       <p class="text-sm font-semibold text-gray-900">{{ actionLabel(entry) }}</p>
-                      <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                      <span
+                        class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700"
+                      >
                         {{ transitionLabel(entry) }}
                       </span>
                     </div>
@@ -117,7 +209,10 @@
                     @if (entry.justification) {
                       <p class="mt-1 text-sm text-gray-600">{{ entry.justification }}</p>
                     }
-                    <p class="mt-2 truncate font-mono text-xs text-gray-400" [title]="entry.entryHash">
+                    <p
+                      class="mt-2 truncate font-mono text-xs text-gray-400"
+                      [title]="entry.entryHash"
+                    >
                       {{ hashLabel(entry.entryHash) }}
                     </p>
                   </div>

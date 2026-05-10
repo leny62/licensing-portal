@@ -31,6 +31,9 @@ export const verifyAuditChainRows = (rows: ApplicationAudit[]): AuditChainVerifi
     if (!storedPreviousHash.equals(expectedPreviousHash)) {
       return {
         valid: false,
+        checkedEntries: index,
+        divergenceAtEntryId: row.id,
+        reason: 'PREVIOUS_HASH_MISMATCH',
         divergence: {
           applicationId: row.applicationId,
           entryId: row.id,
@@ -48,6 +51,9 @@ export const verifyAuditChainRows = (rows: ApplicationAudit[]): AuditChainVerifi
     if (!storedEntryHash.equals(expectedEntryHash)) {
       return {
         valid: false,
+        checkedEntries: index,
+        divergenceAtEntryId: row.id,
+        reason: 'ENTRY_HASH_MISMATCH',
         divergence: {
           applicationId: row.applicationId,
           entryId: row.id,
@@ -62,5 +68,5 @@ export const verifyAuditChainRows = (rows: ApplicationAudit[]): AuditChainVerifi
     expectedPreviousHash = storedEntryHash;
   }
 
-  return { valid: true };
+  return { valid: true, checkedEntries: rows.length };
 };

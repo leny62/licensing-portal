@@ -4,6 +4,7 @@ import { ApplicationAuditResponse } from '../interfaces/audit.interface';
 const ACTION_LABELS: Record<string, string> = {
   assign: 'Reviewer assigned',
   claim: 'Application claimed',
+  create_draft: 'Draft created',
   decide_approve: 'Application approved',
   decide_reject: 'Application rejected',
   recommend_approval: 'Approval recommended',
@@ -15,6 +16,8 @@ const ACTION_LABELS: Record<string, string> = {
   seed_review_claimed: 'Review claimed',
   seed_review_submitted: 'Review submitted',
   submit: 'Application submitted',
+  update_draft: 'Draft updated',
+  upload_document: 'Document uploaded',
   withdraw: 'Application withdrawn',
 };
 
@@ -77,10 +80,20 @@ export const auditPayloadSummary = (payload: unknown): string => {
   const rowVersion = valueText(payload['rowVersion']);
   const reviewerId = valueText(payload['reviewerId']);
   const decision = valueText(payload['decision'] ?? payload['recommendation']);
+  const referenceNumber = valueText(payload['referenceNumber']);
+  const documentSlot = valueText(payload['slot']);
+  const documentVersion = valueText(payload['version']);
+  const changedFields = Array.isArray(payload['changedFields'])
+    ? payload['changedFields'].map(String).join(', ')
+    : null;
   const parts = [
+    referenceNumber === null ? null : `reference ${referenceNumber}`,
     rowVersion === null ? null : `row version ${rowVersion}`,
     reviewerId === null ? null : `reviewer ${reviewerId}`,
     decision === null ? null : `decision ${decision}`,
+    documentSlot === null ? null : `document ${documentSlot}`,
+    documentVersion === null ? null : `version ${documentVersion}`,
+    changedFields === null || changedFields === '' ? null : `changed ${changedFields}`,
   ].filter((value): value is string => value !== null);
 
   return parts.length === 0 ? 'Payload recorded' : parts.join(' - ');

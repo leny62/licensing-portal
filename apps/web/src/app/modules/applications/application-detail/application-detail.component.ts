@@ -10,10 +10,15 @@ import { Observable, finalize } from 'rxjs';
 
 import { ApplicationDecision } from '../../../core/enums/application-decision.enum';
 import { ApplicationState } from '../../../core/enums/application-state.enum';
+import { BANK_CATEGORY_LABELS, BankCategory } from '../../../core/enums/bank-category.enum';
 import { DOCUMENT_SLOT_LABELS, DocumentSlot } from '../../../core/enums/document-slot.enum';
 import { UserRole } from '../../../core/enums/user-role.enum';
 import { ApplicationResponse } from '../../../core/interfaces/application.interface';
 import { ApplicationAuditResponse } from '../../../core/interfaces/audit.interface';
+import {
+  ComplianceChecklistItem,
+  ComplianceChecklistResponse,
+} from '../../../core/interfaces/compliance-checklist.interface';
 import { ApplicationDocumentResponse } from '../../../core/interfaces/document.interface';
 import { UserResponse } from '../../../core/interfaces/user.interface';
 import { ApplicationsService } from '../../../core/services/applications.service';
@@ -74,6 +79,7 @@ export class ApplicationDetailComponent implements OnInit {
   readonly UserRole = UserRole;
   readonly ApplicationState = ApplicationState;
   readonly ApplicationDecision = ApplicationDecision;
+  readonly bankCategoryLabels = BANK_CATEGORY_LABELS;
   readonly DocumentSlot = DocumentSlot;
   readonly documentSlotLabels = DOCUMENT_SLOT_LABELS;
   readonly documentSlots = Object.values(DocumentSlot);
@@ -86,11 +92,14 @@ export class ApplicationDetailComponent implements OnInit {
   });
 
   application: ApplicationResponse | null = null;
+  compliance: ComplianceChecklistResponse | null = null;
   audit: ApplicationAuditResponse[] = [];
   reviewers: UserResponse[] = [];
   documents: ApplicationDocumentResponse[] = [];
   selectedSlot: DocumentSlot | '' = '';
   uploadLoading = false;
+  complianceLoading = false;
+  complianceError = false;
   isLoading = true;
   hasError = false;
   actionLoading = false;
@@ -110,6 +119,10 @@ export class ApplicationDetailComponent implements OnInit {
 
     this.isLoading = true;
     this.hasError = false;
+    this.application = null;
+    this.compliance = null;
+    this.audit = [];
+    this.documents = [];
 
     this.applicationsService
       .get(id)
@@ -117,6 +130,7 @@ export class ApplicationDetailComponent implements OnInit {
       .subscribe({
         next: (application) => {
           this.application = application;
+          this.loadCompliance(application.id);
           this.loadAudit(application.id);
           this.loadDocuments(application.id);
           this.loadReviewersIfNeeded();
@@ -139,6 +153,18 @@ export class ApplicationDetailComponent implements OnInit {
     return this.documentSlotLabels[slot as DocumentSlot] ?? slot;
   }
 
+  bankCategoryLabel(category: BankCategory): string {
+    return this.bankCategoryLabels[category] ?? category;
+  }
+
+  formattedRwf(value: string): string {
+    return new Intl.NumberFormat('en-RW', {
+      maximumFractionDigits: 0,
+      style: 'currency',
+      currency: 'RWF',
+    }).format(Number(value));
+  }
+
   actionLabel(entry: ApplicationAuditResponse): string {
     return formatAuditAction(entry.action);
   }
@@ -157,6 +183,28 @@ export class ApplicationDetailComponent implements OnInit {
 
   hashLabel(hash: string | null): string {
     return shortAuditHash(hash);
+  }
+
+  evidenceLabel(item: ComplianceChecklistItem): string {
+    if (item.evidence.length === 0) {
+      return 'No evidence uploaded.';
+    }
+
+    return item.evidence
+      .map((evidence) => {
+        const versions = evidence.versions.map((version) => `v${version}`).join(', ');
+        return `${this.slotLabel(evidence.slot)} ${versions}`;
+      })
+      .join('; ');
+  }
+
+  complianceProgressLabel(): string {
+    if (this.compliance === null) {
+      return 'No checklist loaded.';
+    }
+
+    const summary = this.compliance.summary;
+    return `${summary.complete} complete · ${summary.missing} missing · ${summary.reviewRequired} needs review`;
   }
 
   canVerifyAudit(): boolean {
@@ -198,6 +246,7 @@ export class ApplicationDetailComponent implements OnInit {
         next: () => {
           this.notify.success('Document uploaded.');
           this.loadDocuments(this.application!.id);
+          this.loadCompliance(this.application!.id);
         },
         error: () => this.notify.error('Upload failed. Check file type and size (max 5 MB).'),
       });
@@ -348,6 +397,21 @@ export class ApplicationDetailComponent implements OnInit {
       next: (response) => (this.audit = normalizePagedResponse(response).records),
       error: () => (this.audit = []),
     });
+  }
+
+  private loadCompliance(applicationId: string): void {
+    this.complianceLoading = true;
+    this.complianceError = false;
+    this.applicationsService
+      .compliance(applicationId)
+      .pipe(finalize(() => (this.complianceLoading = false)))
+      .subscribe({
+        next: (checklist) => (this.compliance = checklist),
+        error: () => {
+          this.compliance = null;
+          this.complianceError = true;
+        },
+      });
   }
 
   private loadDocuments(applicationId: string): void {

@@ -15,6 +15,15 @@ import { SystemLogsService } from '../../modules/system-logs/system-logs.service
 import { AuthenticatedUser } from '../../modules/auth/interfaces/authenticated-user.interface';
 import { CORRELATION_ID_HEADER } from './correlation-id.interceptor';
 
+const sensitiveQueryKeys = new Set([
+  'password',
+  'token',
+  'accessToken',
+  'refreshToken',
+  'authorization',
+  'code',
+]);
+
 @Injectable()
 export class SystemLogInterceptor implements NestInterceptor {
   private readonly logger = new Logger(SystemLogInterceptor.name);
@@ -75,7 +84,7 @@ export class SystemLogInterceptor implements NestInterceptor {
         userName: request.user?.email ?? null,
         level: event.level,
         method: request.method,
-        url: request.url,
+        url: this.safeUrl(request.url),
         message: event.message,
         requestId: this.requestId(request),
         exception: event.exception ?? null,
@@ -115,5 +124,21 @@ export class SystemLogInterceptor implements NestInterceptor {
 
   private shouldSkip(url: string): boolean {
     return url === '/healthz' || url === '/metrics';
+  }
+
+  private safeUrl(url: string): string {
+    try {
+      const parsedUrl = new URL(url, 'http://internal');
+
+      for (const key of sensitiveQueryKeys) {
+        if (parsedUrl.searchParams.has(key)) {
+          parsedUrl.searchParams.set(key, '[REDACTED]');
+        }
+      }
+
+      return `${parsedUrl.pathname}${parsedUrl.search}`;
+    } catch {
+      return url;
+    }
   }
 }

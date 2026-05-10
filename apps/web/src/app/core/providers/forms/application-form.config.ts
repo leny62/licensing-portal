@@ -1,11 +1,16 @@
 import { Validators } from '@angular/forms';
 
+import {
+  BANK_CATEGORY_LABELS,
+  BANK_CATEGORY_MINIMUM_CAPITAL_RWF,
+  BankCategory,
+} from '../../enums/bank-category.enum';
 import { StepConfig } from '../../interfaces/form.interface';
 
 export const applicationFormConfig = (): StepConfig[] => [
   {
     title: 'Institution',
-    subtitle: 'Capture the applicant institution and legal identity.',
+    subtitle: 'Capture the applicant institution, licence category, and legal identity.',
     fields: [
       {
         name: 'institutionName',
@@ -13,6 +18,25 @@ export const applicationFormConfig = (): StepConfig[] => [
         label: 'Institution name',
         placeholder: 'Kigali Community Bank',
         validators: [Validators.required],
+      },
+      {
+        name: 'bankCategory',
+        type: 'select',
+        label: 'Bank category',
+        validators: [Validators.required],
+        defaultValue: BankCategory.CommercialBank,
+        options: Object.values(BankCategory).map((category) => ({
+          label: BANK_CATEGORY_LABELS[category],
+          value: category,
+        })),
+      },
+      {
+        name: 'paidUpCapitalRwf',
+        type: 'number',
+        label: 'Paid-up capital (RWF)',
+        placeholder: String(BANK_CATEGORY_MINIMUM_CAPITAL_RWF[BankCategory.CommercialBank]),
+        hint: 'Minimums: commercial 20B, development 50B, cooperative 10B, mortgage 10B.',
+        validators: [Validators.required, Validators.min(10000000000)],
       },
       {
         name: 'legalForm',

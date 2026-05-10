@@ -105,7 +105,14 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       requireActor(input, UserRole.APPROVER);
       requireSeparationOfDuties(input);
       return { nextState: ApplicationState.REJECTED };
+
+    case ApplicationAction.CreateDraft:
+    case ApplicationAction.UpdateDraft:
+    case ApplicationAction.UploadDocument:
+      throw illegal(input);
   }
+
+  throw illegal(input);
 };
 
 const requireState = (input: TransitionInput, state: ApplicationState): void => {

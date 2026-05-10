@@ -1,7 +1,11 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Application, ApplicationState, Prisma, UserRole } from '@prisma/client';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { Application, ApplicationState, BankCategory, Prisma, UserRole } from '@prisma/client';
 
-import { ResourceNotFoundError, VersionConflictError } from '../../common/errors/domain.errors';
+import {
+  ConflictError,
+  ResourceNotFoundError,
+  VersionConflictError,
+} from '../../common/errors/domain.errors';
 import { PagedResponse } from '../../common/interfaces/paged-response.interface';
 import { AuditService } from '../../infra/audit/audit.service';
 import { PrismaService } from '../../infra/prisma/prisma.service';
@@ -13,6 +17,9 @@ import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ApplicationAction } from './enums/application-action.enum';
 import { ApplicationDecision } from './enums/application-decision.enum';
 import { ApplicationResponse } from './interfaces/application-response.interface';
+import { ComplianceChecklistResponse } from './interfaces/compliance-checklist.interface';
+import { meetsMinimumPaidUpCapital, requiredPaidUpCapitalRwf } from './capital-requirements';
+import { buildComplianceChecklist } from './regulatory-compliance';
 import { transitionApplication } from './state-machine';
 
 @Injectable()
@@ -30,11 +37,15 @@ export class ApplicationsService {
       throw new ForbiddenException('Only applicants can create applications.');
     }
 
-    return this.mapApplication(
-      await this.prisma.application.create({
+    this.assertPaidUpCapitalMeetsMinimum(dto.bankCategory, dto.paidUpCapitalRwf);
+
+    return this.prisma.transactional(async (tx) => {
+      const application = await tx.application.create({
         data: {
           applicantId: actor.id,
           institutionName: dto.institutionName,
+          bankCategory: dto.bankCategory,
+          paidUpCapitalRwf: dto.paidUpCapitalRwf,
           legalForm: dto.legalForm,
           country: dto.country,
           contactPerson: dto.contactPerson,
@@ -42,8 +53,23 @@ export class ApplicationsService {
           contactPhone: dto.contactPhone,
           summary: dto.summary,
         },
-      }),
-    );
+      });
+
+      await this.auditService.write(tx, {
+        applicationId: application.id,
+        actorId: actor.id,
+        action: ApplicationAction.CreateDraft,
+        toState: application.state,
+        payload: {
+          referenceNumber: application.referenceNumber,
+          institutionName: application.institutionName,
+          bankCategory: application.bankCategory,
+          paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
+        },
+      });
+
+      return this.mapApplication(application);
+    });
   }
 
   async list(
@@ -92,6 +118,13 @@ export class ApplicationsService {
     return this.mapApplication(application);
   }
 
+  async compliance(actor: AuthenticatedUser, id: string): Promise<ComplianceChecklistResponse> {
+    const application = await this.findApplicationOrThrow(id);
+    this.assertCanView(actor, application);
+
+    return this.complianceFor(application);
+  }
+
   async updateDraft(
     actor: AuthenticatedUser,
     id: string,
@@ -103,15 +136,35 @@ export class ApplicationsService {
       throw new ForbiddenException('Only the applicant can edit their draft.');
     }
 
-    return this.mapApplication(
-      await this.prisma.application.update({
+    this.assertPaidUpCapitalMeetsMinimum(
+      dto.bankCategory ?? application.bankCategory,
+      dto.paidUpCapitalRwf ?? Number(application.paidUpCapitalRwf),
+    );
+
+    return this.prisma.transactional(async (tx) => {
+      const updated = await tx.application.update({
         where: { id },
         data: dto,
-      }),
-    );
+      });
+
+      await this.auditService.write(tx, {
+        applicationId: id,
+        actorId: actor.id,
+        action: ApplicationAction.UpdateDraft,
+        fromState: application.state,
+        toState: updated.state,
+        payload: {
+          changedFields: Object.keys(dto),
+          rowVersion: application.rowVersion,
+        },
+      });
+
+      return this.mapApplication(updated);
+    });
   }
 
   async submit(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
+    await this.assertComplianceReady(actor, id);
     return this.transition(actor, id, ApplicationAction.Submit, {});
   }
 
@@ -140,6 +193,7 @@ export class ApplicationsService {
   }
 
   async resubmit(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
+    await this.assertComplianceReady(actor, id);
     return this.transition(actor, id, ApplicationAction.Resubmit, { lastResubmitAt: new Date() });
   }
 
@@ -315,6 +369,28 @@ export class ApplicationsService {
     return application;
   }
 
+  private async complianceFor(application: Application): Promise<ComplianceChecklistResponse> {
+    const documents = await this.prisma.applicationDocument.findMany({
+      where: { applicationId: application.id },
+      select: { id: true, slot: true, version: true },
+      orderBy: [{ slot: 'asc' }, { version: 'desc' }],
+    });
+
+    return buildComplianceChecklist(application, documents);
+  }
+
+  private async assertComplianceReady(actor: AuthenticatedUser, id: string): Promise<void> {
+    const application = await this.findApplicationOrThrow(id);
+    this.assertCanView(actor, application);
+    const checklist = await this.complianceFor(application);
+
+    if (checklist.summary.blockingMissing > 0) {
+      throw new ConflictError(
+        'Regulatory checklist has blocking gaps. Complete required evidence before submission.',
+      );
+    }
+  }
+
   private assertCanView(actor: AuthenticatedUser, application: Application): void {
     if (!canViewApplication(actor, application)) {
       throw new ForbiddenException('Access denied.');
@@ -327,6 +403,8 @@ export class ApplicationsService {
       referenceNumber: application.referenceNumber,
       applicantId: application.applicantId,
       institutionName: application.institutionName,
+      bankCategory: application.bankCategory,
+      paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
       legalForm: application.legalForm,
       country: application.country,
       contactPerson: application.contactPerson,
@@ -344,5 +422,15 @@ export class ApplicationsService {
       createdAt: application.createdAt,
       updatedAt: application.updatedAt,
     };
+  }
+
+  private assertPaidUpCapitalMeetsMinimum(category: BankCategory, paidUpCapitalRwf: number): void {
+    const requiredCapital = requiredPaidUpCapitalRwf(category);
+
+    if (!meetsMinimumPaidUpCapital(category, paidUpCapitalRwf)) {
+      throw new BadRequestException(
+        `${category} applications require minimum paid-up capital of RWF ${requiredCapital}.`,
+      );
+    }
   }
 }

@@ -99,7 +99,7 @@ describe('audit hash chain', () => {
     });
 
     expect(rows).toHaveLength(10);
-    expect(verifyAuditChainRows(rows)).toEqual({ valid: true });
+    expect(verifyAuditChainRows(rows)).toEqual({ valid: true, checkedEntries: 10 });
 
     const target = rows[4];
     if (target === undefined) {

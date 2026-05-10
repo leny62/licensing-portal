@@ -1,4 +1,7 @@
 export enum ApplicationAction {
+  CreateDraft = 'create_draft',
+  UpdateDraft = 'update_draft',
+  UploadDocument = 'upload_document',
   Submit = 'submit',
   Withdraw = 'withdraw',
   Claim = 'claim',

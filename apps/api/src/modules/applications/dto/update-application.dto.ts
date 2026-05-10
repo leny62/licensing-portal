@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { BankCategory } from '@prisma/client';
+import { IsEmail, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateApplicationDto {
   @ApiPropertyOptional({
@@ -8,6 +9,24 @@ export class UpdateApplicationDto {
   @IsOptional()
   @IsString()
   institutionName?: string;
+
+  @ApiPropertyOptional({
+    enum: BankCategory,
+    example: BankCategory.COMMERCIAL_BANK,
+  })
+  @IsOptional()
+  @IsEnum(BankCategory)
+  bankCategory?: BankCategory;
+
+  @ApiPropertyOptional({
+    example: 20000000000,
+    minimum: 10000000000,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(10000000000)
+  @Max(999999999999999)
+  paidUpCapitalRwf?: number;
 
   @ApiPropertyOptional({
     example: 'Limited Company',

@@ -1,7 +1,17 @@
 export enum DocumentSlot {
+  ApplicantInformationSheet = 'APPLICANT_INFORMATION_SHEET',
+  ShareholderInformationSheet = 'SHAREHOLDER_INFORMATION_SHEET',
+  PersonalDeclaration = 'PERSONAL_DECLARATION',
+  CreditReport = 'CREDIT_REPORT',
+  CapitalStructure = 'CAPITAL_STRUCTURE',
   BusinessPlan = 'BUSINESS_PLAN',
   IncorporationCertificate = 'INCORPORATION_CERTIFICATE',
+  BoardResolution = 'BOARD_RESOLUTION',
+  ApplicationFeeProof = 'APPLICATION_FEE_PROOF',
   FinancialStatements = 'FINANCIAL_STATEMENTS',
   FitAndProperForm = 'FIT_AND_PROPER_FORM',
+  HomeSupervisorNoObjection = 'HOME_SUPERVISOR_NO_OBJECTION',
+  HomeSupervisorConsolidatedSupervision = 'HOME_SUPERVISOR_CONSOLIDATED_SUPERVISION',
+  HomeSupervisorMouConfirmation = 'HOME_SUPERVISOR_MOU_CONFIRMATION',
   Other = 'OTHER',
 }

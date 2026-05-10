@@ -3,6 +3,8 @@ model Application {
   referenceNumber String                @unique @default(dbgenerated("next_application_reference()")) @map("reference_number")
   applicantId     String                @map("applicant_id") @db.Uuid
   institutionName String                @map("institution_name")
+  bankCategory    BankCategory          @default(COMMERCIAL_BANK) @map("bank_category")
+  paidUpCapitalRwf Decimal              @default(20000000000) @map("paid_up_capital_rwf") @db.Decimal(20, 0)
   legalForm       String                @map("legal_form")
   country         String
   contactPerson   String                @map("contact_person")

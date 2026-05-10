@@ -24,7 +24,7 @@ export class MfaComponent {
   private readonly dialog = inject(MatDialog);
 
   readonly form: FormGroup = this.fb.nonNullable.group({
-    code: ['LOCAL-RECOVERY-0001', [Validators.required, Validators.minLength(6)]],
+    code: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   readonly codeField: FieldConfig = {
@@ -49,7 +49,8 @@ export class MfaComponent {
           width: '420px',
           data: {
             title: 'Use recovery code?',
-            message: 'Recovery codes are single-use. Continue only if this is the code you intend to consume.',
+            message:
+              'Recovery codes are single-use. Continue only if this is the code you intend to consume.',
             confirmLabel: 'Use code',
           },
         })
@@ -82,7 +83,8 @@ export class MfaComponent {
   private messageFromError(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       return (
-        (error.error as ApiErrorEnvelope | undefined)?.error?.message ?? 'Unable to verify the code.'
+        (error.error as ApiErrorEnvelope | undefined)?.error?.message ??
+        'Unable to verify the code.'
       );
     }
     return error instanceof Error ? error.message : 'Unable to verify the code.';

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 
+import { BankCategory } from '../../../core/enums/bank-category.enum';
 import { applicationFormConfig } from '../../../core/providers/forms/application-form.config';
 import {
   ApplicationResponse,
@@ -69,6 +70,9 @@ export class ApplicationEditorDialogComponent {
 
     return {
       institutionName: String(merged['institutionName'] ?? ''),
+      bankCategory:
+        (merged['bankCategory'] as BankCategory | undefined) ?? BankCategory.CommercialBank,
+      paidUpCapitalRwf: Number(merged['paidUpCapitalRwf'] ?? 0),
       legalForm: String(merged['legalForm'] ?? ''),
       country: String(merged['country'] ?? ''),
       contactPerson: String(merged['contactPerson'] ?? ''),

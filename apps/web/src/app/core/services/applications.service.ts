@@ -13,6 +13,7 @@ import {
   RecommendationRequest,
   UpdateApplicationRequest,
 } from '../interfaces/application.interface';
+import { ComplianceChecklistResponse } from '../interfaces/compliance-checklist.interface';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +26,10 @@ export class ApplicationsService {
 
   get(id: string): Observable<ApplicationResponse> {
     return this.api.get<ApplicationResponse>(`/applications/${id}`);
+  }
+
+  compliance(id: string): Observable<ComplianceChecklistResponse> {
+    return this.api.get<ComplianceChecklistResponse>(`/applications/${id}/compliance`);
   }
 
   create(body: CreateApplicationRequest): Observable<ApplicationResponse> {

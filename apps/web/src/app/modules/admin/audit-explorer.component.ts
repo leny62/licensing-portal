@@ -85,7 +85,8 @@ export class AuditExplorerComponent {
         },
         error: () => {
           this.hasError = true;
-          this.errorMessage = 'No audit entries were loaded. Check the application ID and try again.';
+          this.errorMessage =
+            'No audit entries were loaded. Check the application ID and try again.';
         },
       });
   }

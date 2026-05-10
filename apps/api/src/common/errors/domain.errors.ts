@@ -4,7 +4,6 @@ export abstract class DomainError extends Error {
   abstract readonly code: ErrorCode;
   abstract readonly httpStatus: number;
 
-  // exactOptionalPropertyTypes: use T|undefined rather than optional ? to allow explicit undefined assignment
   readonly details: Record<string, unknown> | undefined;
 
   constructor(message: string, details?: Record<string, unknown>) {
