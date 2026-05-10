@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 
-import { ApiListResponse, NormalizedList } from '../interfaces/api-list.interface';
+import { ApiListResponse } from '../interfaces/api-list.interface';
 import {
   CreateUserRequest,
   ListUsersQuery,
   UpdateUserRequest,
   UserResponse,
 } from '../interfaces/user.interface';
-import { normalizePagedResponse } from '../utils/api-list-normalizer';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -19,10 +18,8 @@ export class UsersService {
     return this.api.get<UserResponse>('/me');
   }
 
-  list(query: ListUsersQuery = {}): Observable<NormalizedList<UserResponse>> {
-    return this.api
-      .get<ApiListResponse<UserResponse>>('/users', { params: query })
-      .pipe(map((response) => normalizePagedResponse(response)));
+  list(query: ListUsersQuery = {}): Observable<ApiListResponse<UserResponse>> {
+    return this.api.get<ApiListResponse<UserResponse>>('/users', { params: query });
   }
 
   create(body: CreateUserRequest): Observable<UserResponse> {

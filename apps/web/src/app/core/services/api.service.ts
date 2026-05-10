@@ -1,10 +1,9 @@
-import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import '../interfaces/electron.interface';
-
-type QueryValue = string | number | boolean | null | undefined;
+import { buildHttpQueryParams } from '../utils/http-query-params';
 
 export interface RequestOptions {
   params?: object;
@@ -19,22 +18,30 @@ export class ApiService {
 
   get<T>(path: string, options: RequestOptions = {}): Observable<T> {
     return this.http.get<T>(this.url(path), {
-      params: this.params(options.params),
+      params: buildHttpQueryParams(options.params),
       context: options.context,
     });
   }
 
   post<T, B = unknown>(path: string, body?: B, options: RequestOptions = {}): Observable<T> {
     return this.http.post<T>(this.url(path), body ?? {}, {
-      params: this.params(options.params),
+      params: buildHttpQueryParams(options.params),
       context: options.context,
     });
   }
 
   patch<T, B = unknown>(path: string, body: B, options: RequestOptions = {}): Observable<T> {
     return this.http.patch<T>(this.url(path), body, {
-      params: this.params(options.params),
+      params: buildHttpQueryParams(options.params),
       context: options.context,
+    });
+  }
+
+  download(path: string, options: RequestOptions = {}): Observable<Blob> {
+    return this.http.get(this.url(path), {
+      params: buildHttpQueryParams(options.params),
+      context: options.context,
+      responseType: 'blob',
     });
   }
 
@@ -44,17 +51,5 @@ export class ApiService {
 
   private url(path: string): string {
     return `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-  }
-
-  private params(params?: object): HttpParams {
-    let httpParams = new HttpParams();
-
-    for (const [key, value] of Object.entries((params ?? {}) as Record<string, QueryValue>)) {
-      if (value !== undefined && value !== null && value !== '') {
-        httpParams = httpParams.set(key, String(value));
-      }
-    }
-
-    return httpParams;
   }
 }

@@ -37,7 +37,7 @@ export interface CreateApplicationRequest {
 export type UpdateApplicationRequest = Partial<CreateApplicationRequest>;
 
 export interface ListApplicationsQuery {
-  state?: ApplicationState;
+  state?: ApplicationState | ApplicationState[];
   reviewerId?: string;
   q?: string;
   page?: number;

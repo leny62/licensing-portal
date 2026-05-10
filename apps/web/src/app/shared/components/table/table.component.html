@@ -1,15 +1,20 @@
 @if (isLoading) {
   <app-loading-state label="Loading records"></app-loading-state>
 } @else {
-  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.04)]">
-
+  <div
+    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.04)]"
+  >
     <div class="h-[3px] bg-gradient-to-r from-brand-navy via-brand-amber to-green-500"></div>
 
     @if (toolbarVisible()) {
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-navy/5 to-white px-4 py-3">
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-navy/5 to-white px-4 py-3"
+      >
         <div class="min-w-48">
           @if (config.title) {
-            <h2 class="m-0 text-[0.95rem] font-[750] tracking-tight text-slate-900">{{ config.title }}</h2>
+            <h2 class="m-0 text-[0.95rem] font-[750] tracking-tight text-slate-900">
+              {{ config.title }}
+            </h2>
           }
           <p class="m-0 mt-1 text-[0.75rem] font-semibold text-slate-400">
             {{ totalLength() }} records · {{ totalPageCount() }} pages
@@ -18,21 +23,29 @@
 
         <div class="toolbar-controls">
           @if (showSearch) {
-            <label class="search-box">
-              <mat-icon aria-hidden="true">search</mat-icon>
+            <form class="search-box" role="search" (ngSubmit)="submitSearch()">
+              <button type="submit" class="search-submit" aria-label="Submit search">
+                <mat-icon aria-hidden="true">search</mat-icon>
+              </button>
               <input
-                type="search"
+                type="text"
                 [value]="searchTerm"
                 [placeholder]="config.searchPlaceholder ?? 'Search records'"
                 aria-label="Search table records"
-                (input)="handleSearch($any($event.target).value)"
+                (input)="handleSearchInput($any($event.target).value)"
               />
               @if (searchTerm) {
-                <button type="button" mat-icon-button aria-label="Clear search" (click)="clearSearch()">
+                <button
+                  type="button"
+                  class="search-clear"
+                  mat-icon-button
+                  aria-label="Clear search"
+                  (click)="clearSearch()"
+                >
                   <mat-icon>close</mat-icon>
                 </button>
               }
-            </label>
+            </form>
           }
 
           @if (showFilter && filters().length > 0) {
@@ -50,7 +63,11 @@
                 </button>
                 <mat-menu #filterMenu="matMenu">
                   @for (option of filter.options; track optionLabel(option)) {
-                    <button mat-menu-item type="button" (click)="selectFilter(filter.key, optionValue(option))">
+                    <button
+                      mat-menu-item
+                      type="button"
+                      (click)="selectFilter(filter.key, optionValue(option))"
+                    >
                       <span>{{ optionLabel(option) }}</span>
                     </button>
                   }
@@ -86,7 +103,11 @@
         <table mat-table [dataSource]="visibleData()" class="app-table">
           @for (column of config.columns; track column.key) {
             <ng-container [matColumnDef]="column.key">
-              <th mat-header-cell *matHeaderCellDef [class.action-cell]="column.type === 'action-menu'">
+              <th
+                mat-header-cell
+                *matHeaderCellDef
+                [class.action-cell]="column.type === 'action-menu'"
+              >
                 {{ column.label }}
               </th>
               <td

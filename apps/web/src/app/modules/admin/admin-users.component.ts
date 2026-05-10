@@ -8,6 +8,7 @@ import { TableActionEvent, TablePageEvent } from '../../core/interfaces/table.in
 import { usersTableConfig } from '../../core/providers/tables/users-table.config';
 import { NotifyService } from '../../core/services/notify.service';
 import { UsersService } from '../../core/services/users.service';
+import { normalizePagedResponse } from '../../core/utils/api-list-normalizer';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
 import { TableComponent } from '../../shared/components/table/table.component';
@@ -54,10 +55,11 @@ export class AdminUsersComponent implements OnInit {
       .list(query)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: ({ records, totalRecords, totalPages }) => {
-          this.users = records;
-          this.totalRecords = totalRecords;
-          this.totalPages = totalPages;
+        next: (response) => {
+          const result = normalizePagedResponse(response);
+          this.users = result.records;
+          this.totalRecords = result.totalRecords;
+          this.totalPages = result.totalPages;
         },
         error: () => (this.hasError = true),
       });

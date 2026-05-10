@@ -1,22 +1,11 @@
 import { NgClass } from '@angular/common';
-import {
-  Component,
-  DestroyRef,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
-  inject,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import {
   TableAction,
@@ -31,13 +20,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state.component';
 import { LoadingStateComponent } from '../loading-state/loading-state.component';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 
-/**
- * Server-driven table. All filtering and search happens at the API layer.
- * The component emits events; the parent owns the API call and updates [data].
- * Pagination of the current [data] page is done client-side to avoid the
- * round-trip cost for in-memory slicing — swap to a pageChange handler plus
- * totalRecords input when backend pagination is wired.
- */
 @Component({
   selector: 'app-table',
   standalone: true,
@@ -57,15 +39,12 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component';
   styleUrl: './table.component.scss',
 })
 export class TableComponent<T extends object> implements OnChanges {
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly searchSubject = new Subject<string>();
-
   @Input({ required: true }) config!: TableConfig<T>;
   @Input() data: T[] = [];
   @Input() isLoading = false;
+  @Input() serverSide = false;
   @Input() showSearch = true;
   @Input() showFilter = true;
-  @Input() searchDebounceTime = 350;
   @Input() pageSize = 10;
   @Input() totalRecords = 0;
   @Input() totalPages = 0;
@@ -80,15 +59,10 @@ export class TableComponent<T extends object> implements OnChanges {
   @Output() emptyActionClick = new EventEmitter<void>();
 
   searchTerm = '';
+  submittedSearchTerm = '';
   selectedFilters: Record<string, unknown> = {};
   currentPageIndex = 0;
   currentPageSize = 10;
-
-  constructor() {
-    this.searchSubject
-      .pipe(debounceTime(this.searchDebounceTime), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((term) => this.searchChange.emit(term));
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pageSize']) {
@@ -101,7 +75,11 @@ export class TableComponent<T extends object> implements OnChanges {
   }
 
   toolbarVisible(): boolean {
-    return this.showSearch || (this.showFilter && this.filters().length > 0) || Boolean(this.config.title);
+    return (
+      this.showSearch ||
+      (this.showFilter && this.filters().length > 0) ||
+      Boolean(this.config.title)
+    );
   }
 
   filters(): TableFilterOption<T>[] {
@@ -109,6 +87,10 @@ export class TableComponent<T extends object> implements OnChanges {
   }
 
   visibleData(): T[] {
+    if (this.serverSide || this.totalRecords > this.data.length) {
+      return this.data;
+    }
+
     const start = this.currentPageIndex * this.currentPageSize;
     return this.data.slice(start, start + this.currentPageSize);
   }
@@ -154,14 +136,22 @@ export class TableComponent<T extends object> implements OnChanges {
     return (row as Record<string, unknown>)[this.config.trackBy];
   }
 
-  handleSearch(value: string): void {
+  handleSearchInput(value: string): void {
     this.searchTerm = value;
+  }
+
+  submitSearch(): void {
+    const nextTerm = this.searchTerm.trim();
+    if (nextTerm === this.submittedSearchTerm) return;
     this.currentPageIndex = 0;
-    this.searchSubject.next(value.trim());
+    this.submittedSearchTerm = nextTerm;
+    this.searchChange.emit(nextTerm);
   }
 
   clearSearch(): void {
     this.searchTerm = '';
+    if (this.submittedSearchTerm === '') return;
+    this.submittedSearchTerm = '';
     this.currentPageIndex = 0;
     this.searchChange.emit('');
   }
@@ -182,6 +172,7 @@ export class TableComponent<T extends object> implements OnChanges {
 
   clearAllControls(): void {
     this.searchTerm = '';
+    this.submittedSearchTerm = '';
     this.selectedFilters = {};
     this.currentPageIndex = 0;
     this.searchChange.emit('');

@@ -55,7 +55,9 @@ export class ApplicationsService {
 
     const where: Prisma.ApplicationWhereInput = {
       ...this.roleScopedWhere(actor),
-      ...(query.state !== undefined ? { state: query.state } : {}),
+      ...(query.state !== undefined && query.state.length > 0
+        ? { state: { in: query.state } }
+        : {}),
       ...(query.reviewerId !== undefined ? { reviewerId: query.reviewerId } : {}),
       ...(query.q !== undefined
         ? {

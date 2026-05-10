@@ -18,7 +18,6 @@
   padding: 0 0.4rem 0 0.75rem;
   color: #667085;
   box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
-  cursor: text;
   transition:
     border-color 140ms ease,
     box-shadow 140ms ease;
@@ -26,13 +25,6 @@
   &:focus-within {
     border-color: #213769;
     box-shadow: 0 0 0 4px rgb(33 55 105 / 9%);
-  }
-
-  mat-icon {
-    width: 19px;
-    height: 19px;
-    color: #667085;
-    font-size: 19px;
   }
 
   input {
@@ -47,14 +39,42 @@
     font-weight: 600;
   }
 
-  button {
+  .search-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: #eef3fb;
+    color: #213769;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease;
+
+    mat-icon {
+      width: 19px;
+      height: 19px;
+      font-size: 19px;
+    }
+
+    &:hover {
+      background: #eef3fb;
+      color: #213769;
+    }
+  }
+
+  .search-clear {
     width: 30px;
     height: 30px;
     color: #667085;
   }
 }
 
-// Filter pill and clear button
 .filter-trigger,
 .clear-controls {
   display: inline-flex;

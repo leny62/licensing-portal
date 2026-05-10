@@ -35,6 +35,10 @@ export class StatusBadgeComponent {
       inactive: 'Inactive',
       true: 'Active',
       false: 'Inactive',
+      DEBUG: 'Debug',
+      INFO: 'Info',
+      WARN: 'Warn',
+      ERROR: 'Error',
     };
 
     return labels[this.state] ?? this.state;
@@ -61,6 +65,10 @@ export class StatusBadgeComponent {
       inactive: 'neutral',
       true: 'green',
       false: 'neutral',
+      DEBUG: 'neutral',
+      INFO: 'blue',
+      WARN: 'amber',
+      ERROR: 'red',
     };
 
     return tones[this.state] ?? 'neutral';

@@ -1,0 +1,31 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">System logs</h1>
+      <p class="page-copy">Review API activity, failures, request IDs, devices, and runtime context.</p>
+    </div>
+    <app-button icon="download" variant="secondary" [loading]="isExporting" (click)="exportLogs()">
+      Export CSV
+    </app-button>
+  </header>
+
+  @if (hasError) {
+    <app-error-state
+      title="System logs unavailable"
+      message="The log query failed. Try again or check the API health."
+      (retry)="load()"
+    ></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="logs"
+      [isLoading]="isLoading"
+      [serverSide]="true"
+      [totalRecords]="totalRecords"
+      [totalPages]="totalPages"
+      (searchChange)="handleSearch($event)"
+      (filtersChange)="handleFilters($event)"
+      (pageChange)="handlePage($event)"
+    ></app-table>
+  }
+</div>

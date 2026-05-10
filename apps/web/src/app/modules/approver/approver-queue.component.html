@@ -13,8 +13,13 @@
       [config]="config"
       [data]="applications"
       [isLoading]="isLoading"
+      [serverSide]="true"
+      [totalRecords]="totalRecords"
+      [totalPages]="totalPages"
+      [pageSize]="20"
       (actionClick)="handleAction($event)"
       (searchChange)="handleSearch($event)"
+      (pageChange)="handlePage($event)"
     ></app-table>
   }
 </div>

@@ -22,4 +22,8 @@ export class DocumentsService {
       body,
     );
   }
+
+  download(documentId: string): Observable<Blob> {
+    return this.api.download(`/documents/${documentId}/download`);
+  }
 }

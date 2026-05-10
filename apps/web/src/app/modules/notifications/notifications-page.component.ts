@@ -6,6 +6,7 @@ import { TableActionEvent } from '../../core/interfaces/table.interface';
 import { notificationsTableConfig } from '../../core/providers/tables/notifications-table.config';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { normalizePagedResponse } from '../../core/utils/api-list-normalizer';
 import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 
@@ -38,7 +39,7 @@ export class NotificationsPageComponent implements OnInit {
       .list()
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (notifications) => (this.notifications = notifications),
+        next: (response) => (this.notifications = normalizePagedResponse(response).records),
         error: () => (this.hasError = true),
       });
   }

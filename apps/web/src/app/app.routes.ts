@@ -81,6 +81,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/system-logs',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () =>
+          import('./modules/admin/system-logs.component').then(
+            (module) => module.SystemLogsComponent,
+          ),
+      },
+      {
         path: 'applications/:id',
         loadComponent: () =>
           import('./modules/applications/application-detail/application-detail.component').then(

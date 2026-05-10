@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApplicationState } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 import { ApplicationDecision } from '../enums/application-decision.enum';
 
@@ -55,11 +55,19 @@ export class DecisionDto {
 export class ListApplicationsQueryDto {
   @ApiPropertyOptional({
     enum: ApplicationState,
-    example: ApplicationState.UNDER_REVIEW,
+    isArray: true,
+    example: [
+      ApplicationState.RECOMMENDED_FOR_APPROVAL,
+      ApplicationState.RECOMMENDED_FOR_REJECTION,
+    ],
   })
   @IsOptional()
-  @IsEnum(ApplicationState)
-  state?: ApplicationState;
+  @Transform(({ value }) =>
+    value === undefined ? undefined : Array.isArray(value) ? value : [value],
+  )
+  @IsArray()
+  @IsEnum(ApplicationState, { each: true })
+  state?: ApplicationState[];
 
   @ApiPropertyOptional({
     example: '2f6a3d44-40f8-4a0d-a0c0-4a3878a70b2a',

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { ApplicationDecision } from '../enums/application-decision.enum';
-import { ApiListResponse, NormalizedList } from '../interfaces/api-list.interface';
+import { ApiListResponse } from '../interfaces/api-list.interface';
 import {
   ApplicationResponse,
   AssignReviewerRequest,
@@ -13,17 +13,14 @@ import {
   RecommendationRequest,
   UpdateApplicationRequest,
 } from '../interfaces/application.interface';
-import { normalizePagedResponse } from '../utils/api-list-normalizer';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApplicationsService {
   constructor(private readonly api: ApiService) {}
 
-  list(query: ListApplicationsQuery = {}): Observable<NormalizedList<ApplicationResponse>> {
-    return this.api
-      .get<ApiListResponse<ApplicationResponse>>('/applications', { params: query })
-      .pipe(map((response) => normalizePagedResponse(response)));
+  list(query: ListApplicationsQuery = {}): Observable<ApiListResponse<ApplicationResponse>> {
+    return this.api.get<ApiListResponse<ApplicationResponse>>('/applications', { params: query });
   }
 
   get(id: string): Observable<ApplicationResponse> {

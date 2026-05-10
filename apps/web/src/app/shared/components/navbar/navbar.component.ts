@@ -72,6 +72,12 @@ export class NavbarComponent {
       roles: [UserRole.Admin],
     },
     {
+      label: 'System logs',
+      icon: 'manage_search',
+      path: '/admin/system-logs',
+      roles: [UserRole.Admin],
+    },
+    {
       label: 'Notifications',
       icon: 'notifications',
       path: '/notifications',

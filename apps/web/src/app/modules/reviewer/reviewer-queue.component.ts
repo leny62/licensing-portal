@@ -3,11 +3,15 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { ApplicationState } from '../../core/enums/application-state.enum';
-import { ApplicationResponse, ListApplicationsQuery } from '../../core/interfaces/application.interface';
+import {
+  ApplicationResponse,
+  ListApplicationsQuery,
+} from '../../core/interfaces/application.interface';
 import { TableActionEvent, TablePageEvent } from '../../core/interfaces/table.interface';
 import { reviewerQueueApplicationTableConfig } from '../../core/providers/tables/application-table.config';
 import { ApplicationsService } from '../../core/services/applications.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { normalizePagedResponse } from '../../core/utils/api-list-normalizer';
 import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 
@@ -53,10 +57,11 @@ export class ReviewerQueueComponent implements OnInit {
       .list(query)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: ({ records, totalRecords, totalPages }) => {
-          this.applications = records;
-          this.totalRecords = totalRecords;
-          this.totalPages = totalPages;
+        next: (response) => {
+          const result = normalizePagedResponse(response);
+          this.applications = result.records;
+          this.totalRecords = result.totalRecords;
+          this.totalPages = result.totalPages;
         },
         error: () => (this.hasError = true),
       });

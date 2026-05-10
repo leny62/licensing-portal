@@ -29,6 +29,23 @@ describe(ApiService.name, () => {
     request.flush({ ok: true });
   });
 
+  it('serialises array params as repeated keys', () => {
+    service
+      .get('/applications', {
+        params: { state: ['RECOMMENDED_FOR_APPROVAL', 'RECOMMENDED_FOR_REJECTION'] },
+      })
+      .subscribe();
+
+    const request = http.expectOne(
+      '/api/v1/applications?state=RECOMMENDED_FOR_APPROVAL&state=RECOMMENDED_FOR_REJECTION',
+    );
+    expect(request.request.params.getAll('state')).toEqual([
+      'RECOMMENDED_FOR_APPROVAL',
+      'RECOMMENDED_FOR_REJECTION',
+    ]);
+    request.flush([]);
+  });
+
   it('accepts paths without a leading slash and empty bodies', () => {
     service.get('me').subscribe();
     http.expectOne('/api/v1/me').flush({});
@@ -47,6 +64,15 @@ describe(ApiService.name, () => {
     const patch = http.expectOne('/api/v1/users/user-1');
     expect(patch.request.method).toBe('PATCH');
     patch.flush({});
+  });
+
+  it('downloads as a blob', () => {
+    service.download('/documents/doc-1/download').subscribe();
+
+    const request = http.expectOne('/api/v1/documents/doc-1/download');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
   });
 
   it('detects Electron from the preload bridge', () => {
