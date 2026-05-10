@@ -38,6 +38,7 @@ export interface FieldConfig {
   readOnly?: boolean;
   cols?: 1 | 2 | 3;
   defaultValue?: unknown;
+  rows?: number;
 }
 
 export interface StepConfig {

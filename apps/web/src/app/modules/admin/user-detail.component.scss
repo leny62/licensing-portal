@@ -1,0 +1,82 @@
+:host {
+  display: block;
+}
+
+.breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 800;
+
+  a {
+    color: #213769;
+    text-decoration: none;
+  }
+}
+
+.user-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(360px, 1fr);
+  gap: 1rem;
+}
+
+.detail-card,
+.reset-card {
+  border-radius: 14px;
+  padding: 1.15rem;
+}
+
+.section-kicker {
+  margin: 0;
+  color: #98a2b3;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.85rem 0 0;
+}
+
+dt {
+  color: #667085;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0.12rem 0 0;
+  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+h2 {
+  margin: 0.15rem 0 0;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+p:not(.section-kicker) {
+  margin: 0.25rem 0 0;
+  color: #667085;
+  font-size: 0.86rem;
+}
+
+.reset-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 860px) {
+  .user-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}

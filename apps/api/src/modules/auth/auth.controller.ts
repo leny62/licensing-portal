@@ -5,6 +5,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { MfaChallengeDto } from './dto/mfa-challenge.dto';
@@ -34,6 +35,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async mfaChallenge(@Body() body: MfaChallengeDto): Promise<LoginSuccessResponse> {
     return this.authService.completeMfaLogin(body.mfaToken, body.code, body.deviceId);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forgotPassword(@Body() body: ForgotPasswordDto): Promise<void> {
+    await this.authService.requestPasswordReset(body.email);
   }
 
   @ApiBearerAuth()

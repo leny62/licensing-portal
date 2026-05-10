@@ -1,0 +1,56 @@
+<section class="file-preview-shell">
+  @if (document; as selectedDocument) {
+    <div class="preview-toolbar">
+      <div class="file-heading">
+        <span class="file-icon">
+          <mat-icon aria-hidden="true">description</mat-icon>
+        </span>
+        <div class="min-w-0">
+          <p class="section-kicker">File preview</p>
+          <h3>{{ selectedDocument.originalFilename }}</h3>
+          <p>
+            {{ slotLabel(selectedDocument.slot) }} · v{{ selectedDocument.version }} ·
+            {{ formattedSize(selectedDocument.sizeBytes) }}
+          </p>
+        </div>
+      </div>
+
+      <app-button
+        type="button"
+        variant="secondary"
+        icon="download"
+        (click)="downloadClick.emit(selectedDocument)"
+      >
+        Download
+      </app-button>
+    </div>
+
+    <div class="preview-canvas">
+      @if (isPreviewLoading) {
+        <app-loading-state label="Preparing preview"></app-loading-state>
+      } @else if (previewError) {
+        <app-empty-state
+          icon="visibility_off"
+          title="Preview unavailable"
+          message="The file can still be downloaded."
+        ></app-empty-state>
+      } @else if (isPdfPreview() && previewResourceUrl !== null) {
+        <iframe [src]="previewResourceUrl" title="Document preview"></iframe>
+      } @else if (isImagePreview() && previewImageUrl !== null) {
+        <img [src]="previewImageUrl" [alt]="selectedDocument.originalFilename" />
+      } @else {
+        <app-empty-state
+          icon="insert_drive_file"
+          title="No inline preview"
+          message="This file type is available by download."
+        ></app-empty-state>
+      }
+    </div>
+  } @else {
+    <app-empty-state
+      icon="folder_open"
+      title="No file selected"
+      message="Choose a document to preview it."
+    ></app-empty-state>
+  }
+</section>

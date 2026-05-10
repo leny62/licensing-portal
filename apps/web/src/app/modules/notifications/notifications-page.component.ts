@@ -40,7 +40,10 @@ export class NotificationsPageComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (response) => (this.notifications = normalizePagedResponse(response).records),
-        error: () => (this.hasError = true),
+        error: () => {
+          this.notifications = [];
+          this.hasError = true;
+        },
       });
   }
 

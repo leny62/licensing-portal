@@ -16,6 +16,7 @@ export interface ComplianceChecklistItem {
   status: ComplianceCheckStatus;
   blocking: boolean;
   regulatoryBasis: string;
+  requiredSlots: DocumentSlot[];
   evidence: ComplianceChecklistEvidence[];
 }
 

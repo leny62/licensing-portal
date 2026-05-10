@@ -157,6 +157,7 @@ export const buildComplianceChecklist = (
             : ComplianceCheckStatus.Missing,
           blocking: true,
           regulatoryBasis: articleFour,
+          requiredSlots: [],
           evidence: [],
         },
       ],
@@ -184,6 +185,7 @@ export const buildComplianceChecklist = (
               status: ComplianceCheckStatus.NotApplicable,
               blocking: false,
               regulatoryBasis: `${articleNine}; ${articleTwelve}`,
+              requiredSlots: [],
               evidence: [],
             },
           ],
@@ -200,6 +202,7 @@ export const buildComplianceChecklist = (
           status: ComplianceCheckStatus.ReviewRequired,
           blocking: false,
           regulatoryBasis: articleFive,
+          requiredSlots: [DocumentSlot.ShareholderInformationSheet],
           evidence: evidenceFor(DocumentSlot.ShareholderInformationSheet, documents),
         },
         {
@@ -210,6 +213,7 @@ export const buildComplianceChecklist = (
           status: ComplianceCheckStatus.ReviewRequired,
           blocking: false,
           regulatoryBasis: `${articleSixToEight}; ${articleNine}`,
+          requiredSlots: [DocumentSlot.BusinessPlan],
           evidence: evidenceFor(DocumentSlot.BusinessPlan, documents),
         },
       ],
@@ -241,6 +245,7 @@ const documentRequirementItem = (
     status: evidence.length > 0 ? ComplianceCheckStatus.Complete : ComplianceCheckStatus.Missing,
     blocking,
     regulatoryBasis: requirement.regulatoryBasis,
+    requiredSlots: [requirement.slot],
     evidence,
   };
 };

@@ -1,0 +1,66 @@
+<div class="page-shell">
+  <nav class="breadcrumb-row" aria-label="Breadcrumb">
+    <a routerLink="/admin/users">Users</a>
+    <span>/</span>
+    <span>User details</span>
+  </nav>
+
+  @if (isLoading) {
+    <app-loading-state label="Loading user"></app-loading-state>
+  } @else if (hasError || user === null) {
+    <app-error-state title="User unavailable" (retry)="load()"></app-error-state>
+  } @else {
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ user.fullName }}</h1>
+        <p class="page-copy">{{ user.email }}</p>
+      </div>
+      <app-button type="button" variant="secondary" icon="arrow_back" routerLink="/admin/users">
+        Back to users
+      </app-button>
+    </header>
+
+    <section class="user-detail-layout">
+      <article class="surface detail-card">
+        <p class="section-kicker">Account</p>
+        <dl>
+          <div>
+            <dt>Role</dt>
+            <dd>{{ user.role }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ user.isActive ? 'Active' : 'Inactive' }}</dd>
+          </div>
+          <div>
+            <dt>Institution</dt>
+            <dd>{{ user.institutionName ?? 'Internal regulator account' }}</dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ user.createdAt | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{{ user.updatedAt | date: 'medium' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="surface reset-card">
+        <div>
+          <p class="section-kicker">Security</p>
+          <h2>Reset password</h2>
+          <p>Use a temporary password and send it through an approved out-of-band channel.</p>
+        </div>
+
+        <form [formGroup]="form" class="reset-form" (ngSubmit)="resetPassword()">
+          <app-inputs [field]="passwordField" [group]="form"></app-inputs>
+          <app-button type="submit" variant="danger" icon="lock_reset" [loading]="isSaving">
+            Reset password
+          </app-button>
+        </form>
+      </article>
+    </section>
+  }
+</div>

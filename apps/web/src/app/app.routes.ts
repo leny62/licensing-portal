@@ -11,6 +11,13 @@ export const routes: Routes = [
       import('./modules/auth/login/login.component').then((module) => module.LoginComponent),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./modules/auth/forgot-password/forgot-password.component').then(
+        (module) => module.ForgotPasswordComponent,
+      ),
+  },
+  {
     path: 'auth/mfa',
     loadComponent: () =>
       import('./modules/auth/mfa/mfa.component').then((module) => module.MfaComponent),
@@ -26,6 +33,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./modules/shell/shell.component').then((module) => module.ShellComponent),
     children: [
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./modules/profile/profile.component').then((module) => module.ProfileComponent),
+      },
       {
         path: 'applicant',
         canActivate: [roleGuard],
@@ -69,6 +81,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./modules/admin/admin-users.component').then(
             (module) => module.AdminUsersComponent,
+          ),
+      },
+      {
+        path: 'admin/users/:id',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () =>
+          import('./modules/admin/user-detail.component').then(
+            (module) => module.UserDetailComponent,
           ),
       },
       {

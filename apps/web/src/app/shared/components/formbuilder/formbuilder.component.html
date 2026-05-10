@@ -38,12 +38,14 @@
 
           <div class="action-bar">
             @if (stepIndex > 0) {
-              <app-button variant="secondary" icon="arrow_back" matStepperPrevious>Back</app-button>
+              <app-button type="button" variant="secondary" icon="arrow_back" (click)="previous()">
+                Back
+              </app-button>
             }
             @if (stepIndex < steps.length - 1) {
-              <app-button variant="primary" icon="arrow_forward" matStepperNext
-                >Continue</app-button
-              >
+              <app-button type="button" variant="primary" icon="arrow_forward" (click)="next()">
+                Continue
+              </app-button>
             }
           </div>
         </section>
@@ -62,7 +64,9 @@
         </div>
         <app-form-summary [steps]="steps" [value]="form.getRawValue()"></app-form-summary>
         <div class="action-bar">
-          <app-button variant="secondary" icon="arrow_back" matStepperPrevious>Back</app-button>
+          <app-button type="button" variant="secondary" icon="arrow_back" (click)="previous()">
+            Back
+          </app-button>
           <app-button type="submit" variant="primary" icon="save" [loading]="isLoading">
             Save
           </app-button>

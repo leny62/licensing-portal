@@ -44,6 +44,7 @@ export const usersTableConfig: TableConfig<UserResponse> = {
       label: '',
       type: 'action-menu',
       actions: [
+        { id: 'view', label: 'View details', icon: 'visibility', tone: 'primary' },
         { id: 'edit', label: 'Edit', icon: 'edit' },
         {
           id: 'deactivate',

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { ApplicationState } from '../../core/enums/application-state.enum';
 import {
   ApplicationResponse,
   ListApplicationsQuery,
@@ -29,6 +30,7 @@ export class ReviewerAssignmentsComponent implements OnInit {
   totalPages = 0;
 
   private searchQuery = '';
+  private filterState: ApplicationState | undefined;
   private currentPage = 0;
   private readonly pageSize = 20;
 
@@ -50,6 +52,7 @@ export class ReviewerAssignmentsComponent implements OnInit {
     const query: ListApplicationsQuery = { page: this.currentPage, size: this.pageSize };
     if (user !== null) query.reviewerId = user.id;
     if (this.searchQuery) query.q = this.searchQuery;
+    if (this.filterState !== undefined) query.state = this.filterState;
 
     this.applicationsService
       .list(query)
@@ -67,6 +70,12 @@ export class ReviewerAssignmentsComponent implements OnInit {
 
   handleSearch(term: string): void {
     this.searchQuery = term;
+    this.currentPage = 0;
+    this.load();
+  }
+
+  handleFilters(filters: Record<string, unknown>): void {
+    this.filterState = filters['state'] as ApplicationState | undefined;
     this.currentPage = 0;
     this.load();
   }

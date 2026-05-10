@@ -21,7 +21,7 @@
 
     <div class="mb-5">
       <p class="m-0 text-[0.72rem] font-extrabold uppercase tracking-tight text-brand-amber">
-        Secure workspace
+        Step 2 of 2
       </p>
       <h1 class="m-0 mt-1 text-[1.35rem] font-extrabold tracking-tight text-slate-900">
         Two-factor authentication
@@ -53,6 +53,16 @@
         [loading]="isLoading()"
       >
         Verify
+      </app-button>
+
+      <app-button
+        class="mfa-submit block"
+        type="button"
+        variant="ghost"
+        [disabled]="isLoading()"
+        (click)="backToLogin()"
+      >
+        Return to login
       </app-button>
     </form>
 

@@ -8,7 +8,7 @@
           <textarea
             matInput
             [id]="field.name"
-            rows="4"
+            [rows]="field.rows ?? 4"
             [formControlName]="field.name"
             [placeholder]="field.placeholder ?? ''"
             [readonly]="field.readOnly"

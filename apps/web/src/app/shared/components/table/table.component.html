@@ -1,11 +1,53 @@
-@if (isLoading) {
-  <app-loading-state label="Loading records"></app-loading-state>
-} @else {
-  <div
-    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.04)]"
-  >
-    <div class="h-[3px] bg-gradient-to-r from-brand-navy via-brand-amber to-green-500"></div>
+<div
+  class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.04)]"
+>
+  <div class="h-[3px] bg-gradient-to-r from-brand-navy via-brand-amber to-green-500"></div>
 
+  @if (isLoading) {
+    <div class="table-skeleton" aria-label="Loading table records" aria-busy="true">
+      @if (toolbarVisible()) {
+        <div class="skeleton-toolbar">
+          <div class="skeleton-title">
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="skeleton-controls">
+            @if (showSearch) {
+              <span class="skeleton-search"></span>
+            }
+            @if (showFilter && filters().length > 0) {
+              @for (filter of filters(); track filter.key) {
+                <span class="skeleton-filter"></span>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <div class="skeleton-table">
+        <div
+          class="skeleton-row skeleton-head"
+          [style.grid-template-columns]="'repeat(' + displayedColumns().length + ', minmax(0, 1fr))'"
+        >
+          @for (column of displayedColumns(); track column) {
+            <span></span>
+          }
+        </div>
+
+        @for (row of skeletonRows; track $index) {
+          <div
+            class="skeleton-row"
+            [style.grid-template-columns]="'repeat(' + displayedColumns().length + ', minmax(0, 1fr))'"
+          >
+            @for (column of displayedColumns(); track column) {
+              <span></span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
     @if (toolbarVisible()) {
       <div
         class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-navy/5 to-white px-4 py-3"
@@ -23,7 +65,7 @@
 
         <div class="toolbar-controls">
           @if (showSearch) {
-            <form class="search-box" role="search" (ngSubmit)="submitSearch()">
+            <form class="search-box" role="search" (submit)="handleSearchSubmit($event)">
               <button type="submit" class="search-submit" aria-label="Submit search">
                 <mat-icon aria-hidden="true">search</mat-icon>
               </button>
@@ -171,5 +213,5 @@
         (page)="handlePage($event)"
       ></mat-paginator>
     }
-  </div>
-}
+  }
+</div>

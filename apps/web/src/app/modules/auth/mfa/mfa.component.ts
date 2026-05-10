@@ -64,6 +64,10 @@ export class MfaComponent {
     this.complete(code);
   }
 
+  backToLogin(): void {
+    this.auth.cancelMfa();
+  }
+
   private complete(code: string): void {
     this.isLoading.set(true);
     this.errorMessage.set('');

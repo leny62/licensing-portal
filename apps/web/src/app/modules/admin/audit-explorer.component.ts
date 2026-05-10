@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { finalize } from 'rxjs';
 
 import {
@@ -7,20 +8,15 @@ import {
   AuditChainVerificationResult,
 } from '../../core/interfaces/audit.interface';
 import { FieldConfig } from '../../core/interfaces/form.interface';
+import { TableActionEvent, TablePageEvent } from '../../core/interfaces/table.interface';
+import { auditTableConfig } from '../../core/providers/tables/audit-table.config';
 import { AuditService } from '../../core/services/audit.service';
 import { normalizePagedResponse } from '../../core/utils/api-list-normalizer';
-import { formatDateTime } from '../../core/utils/application-view.mapper';
-import {
-  auditPayloadSummary,
-  formatAuditAction,
-  formatAuditActor,
-  formatAuditTransition,
-  shortAuditHash,
-} from '../../core/utils/audit-view.mapper';
+import { AuditEntryDialogComponent } from '../../shared/components/audit-entry-dialog/audit-entry-dialog.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
 import { InputsComponent } from '../../shared/components/inputs/inputs.component';
-import { LoadingStateComponent } from '../../shared/components/loading-state/loading-state.component';
+import { TableComponent } from '../../shared/components/table/table.component';
 
 @Component({
   selector: 'app-audit-explorer',
@@ -29,18 +25,20 @@ import { LoadingStateComponent } from '../../shared/components/loading-state/loa
     ButtonComponent,
     ErrorStateComponent,
     InputsComponent,
-    LoadingStateComponent,
     ReactiveFormsModule,
+    TableComponent,
   ],
   templateUrl: './audit-explorer.component.html',
 })
 export class AuditExplorerComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auditService = inject(AuditService);
+  private readonly dialog = inject(MatDialog);
 
   readonly form = this.fb.nonNullable.group({
     applicationId: ['', [Validators.required]],
   });
+  readonly tableConfig = auditTableConfig;
 
   readonly appIdField: FieldConfig = {
     name: 'applicationId',
@@ -112,39 +110,19 @@ export class AuditExplorerComponent {
       });
   }
 
-  formatted(value: string): string {
-    return formatDateTime(value);
-  }
-
-  actionLabel(entry: ApplicationAuditResponse): string {
-    return formatAuditAction(entry.action);
-  }
-
-  actorLabel(entry: ApplicationAuditResponse): string {
-    return formatAuditActor(entry);
-  }
-
-  transitionLabel(entry: ApplicationAuditResponse): string {
-    return formatAuditTransition(entry);
-  }
-
-  payloadLabel(entry: ApplicationAuditResponse): string {
-    return auditPayloadSummary(entry.payload);
-  }
-
-  hashLabel(hash: string | null): string {
-    return shortAuditHash(hash);
-  }
-
-  previousPage(): void {
-    if (this.currentPage > 0) {
-      this.load(this.currentPage - 1);
+  handleAction(event: TableActionEvent<ApplicationAuditResponse>): void {
+    if (event.actionId === 'view') {
+      this.dialog.open(AuditEntryDialogComponent, {
+        width: '760px',
+        maxWidth: '95vw',
+        maxHeight: '94vh',
+        data: { entry: event.row },
+      });
     }
   }
 
-  nextPage(): void {
-    if (this.currentPage + 1 < this.totalPages) {
-      this.load(this.currentPage + 1);
-    }
+  handlePage(event: TablePageEvent): void {
+    this.currentPage = Math.max((event.pageNumber || 1) - 1, 0);
+    this.load(this.currentPage);
   }
 }

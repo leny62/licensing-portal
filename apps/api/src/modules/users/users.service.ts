@@ -23,6 +23,10 @@ export class UsersService {
     return this.mapUser(await this.findUserOrThrow(userId));
   }
 
+  async getById(userId: string): Promise<UserResponse> {
+    return this.mapUser(await this.findUserOrThrow(userId));
+  }
+
   async list(query: ListUsersQueryDto): Promise<PagedResponse<UserResponse>> {
     const page = query.page ?? 0;
     const size = query.size ?? 20;
@@ -98,6 +102,24 @@ export class UsersService {
       this.rethrowUniqueness(error);
       throw error;
     }
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<void> {
+    await this.findUserOrThrow(userId);
+    await this.prisma.transactional(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash: await this.passwordHasher.hash(newPassword),
+          failedLoginCount: 0,
+          lockedUntil: null,
+        },
+      });
+      await tx.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date(), revokeReason: 'admin_password_reset' },
+      });
+    });
   }
 
   async deactivate(userId: string): Promise<UserResponse> {

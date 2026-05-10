@@ -1,5 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { Application, ApplicationState, BankCategory, Prisma, UserRole } from '@prisma/client';
+import {
+  Application,
+  ApplicationState,
+  BankCategory,
+  NotificationType,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import {
   ConflictError,
@@ -16,6 +23,7 @@ import { ListApplicationsQueryDto } from './dto/transition.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ApplicationAction } from './enums/application-action.enum';
 import { ApplicationDecision } from './enums/application-decision.enum';
+import { ComplianceCheckStatus } from './enums/compliance-check-status.enum';
 import { ApplicationResponse } from './interfaces/application-response.interface';
 import { ComplianceChecklistResponse } from './interfaces/compliance-checklist.interface';
 import { meetsMinimumPaidUpCapital, requiredPaidUpCapitalRwf } from './capital-requirements';
@@ -305,9 +313,74 @@ export class ApplicationsService {
       });
 
       const refreshed = await tx.application.findUniqueOrThrow({ where: { id } });
+      await this.createTransitionNotifications(tx, application, refreshed, action, actor.id);
 
       return this.mapApplication(refreshed);
     });
+  }
+
+  private async createTransitionNotifications(
+    tx: Prisma.TransactionClient,
+    previous: Application,
+    current: Application,
+    action: ApplicationAction,
+    actorId: string,
+  ): Promise<void> {
+    const payload = {
+      referenceNumber: current.referenceNumber,
+      institutionName: current.institutionName,
+      action,
+      fromState: previous.state,
+      toState: current.state,
+      actorId,
+    };
+
+    if (action === ApplicationAction.RequestInfo) {
+      await tx.notification.create({
+        data: {
+          userId: current.applicantId,
+          applicationId: current.id,
+          type: NotificationType.REQUEST_INFO,
+          payload,
+        },
+      });
+      return;
+    }
+
+    if (action === ApplicationAction.Approve || action === ApplicationAction.Reject) {
+      await tx.notification.create({
+        data: {
+          userId: current.applicantId,
+          applicationId: current.id,
+          type: NotificationType.FINAL_DECISION,
+          payload,
+        },
+      });
+      return;
+    }
+
+    if (
+      action === ApplicationAction.RecommendApproval ||
+      action === ApplicationAction.RecommendRejection
+    ) {
+      const approvers = await tx.user.findMany({
+        where: { role: UserRole.APPROVER, isActive: true },
+        select: { id: true },
+      });
+
+      if (approvers.length === 0) {
+        return;
+      }
+
+      await tx.notification.createMany({
+        data: approvers.map((approver) => ({
+          userId: approver.id,
+          applicationId: current.id,
+          type: NotificationType.RECOMMENDATION_READY,
+          payload,
+        })),
+      });
+    }
   }
 
   private async reviewerHistoryIds(
@@ -387,6 +460,17 @@ export class ApplicationsService {
     if (checklist.summary.blockingMissing > 0) {
       throw new ConflictError(
         'Regulatory checklist has blocking gaps. Complete required evidence before submission.',
+        {
+          missingRequirements: checklist.sections.flatMap((section) =>
+            section.items
+              .filter((item) => item.blocking && item.status !== ComplianceCheckStatus.Complete)
+              .map((item) => ({
+                section: section.title,
+                title: item.title,
+                requiredSlots: item.requiredSlots,
+              })),
+          ),
+        },
       );
     }
   }

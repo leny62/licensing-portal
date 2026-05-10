@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
 import { ApiErrorEnvelope } from '../../../core/interfaces/api-error.interface';
@@ -13,7 +13,7 @@ import { InputsComponent } from '../../../shared/components/inputs/inputs.compon
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ButtonComponent, InputsComponent, MatIconModule, ReactiveFormsModule],
+  imports: [ButtonComponent, InputsComponent, MatIconModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })

@@ -53,6 +53,8 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       requireApplicantOwns(input);
       if (
         input.currentState !== ApplicationState.DRAFT &&
+        input.currentState !== ApplicationState.SUBMITTED &&
+        input.currentState !== ApplicationState.UNDER_REVIEW &&
         input.currentState !== ApplicationState.CHANGES_REQUESTED
       ) {
         throw illegal(input);

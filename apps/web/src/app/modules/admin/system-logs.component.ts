@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { finalize } from 'rxjs';
 
 import { SystemLogLevel } from '../../core/enums/system-log-level.enum';
 import { ListSystemLogsQuery, SystemLogResponse } from '../../core/interfaces/system-log.interface';
-import { TablePageEvent } from '../../core/interfaces/table.interface';
+import { TableActionEvent, TablePageEvent } from '../../core/interfaces/table.interface';
 import { systemLogsTableConfig } from '../../core/providers/tables/system-logs-table.config';
 import { NotifyService } from '../../core/services/notify.service';
 import { SystemLogsService } from '../../core/services/system-logs.service';
 import { normalizePagedResponse } from '../../core/utils/api-list-normalizer';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
+import { SystemLogDetailsDialogComponent } from '../../shared/components/system-log-details-dialog/system-log-details-dialog.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 
 @Component({
@@ -35,6 +37,7 @@ export class SystemLogsComponent implements OnInit {
   constructor(
     private readonly systemLogsService: SystemLogsService,
     private readonly notify: NotifyService,
+    private readonly dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -79,6 +82,17 @@ export class SystemLogsComponent implements OnInit {
   handlePage(event: TablePageEvent): void {
     this.currentPage = Math.max((event.pageNumber || 1) - 1, 0);
     this.load();
+  }
+
+  handleAction(event: TableActionEvent<SystemLogResponse>): void {
+    if (event.actionId === 'view') {
+      this.dialog.open(SystemLogDetailsDialogComponent, {
+        width: '820px',
+        maxWidth: '95vw',
+        maxHeight: '94vh',
+        data: { log: event.row },
+      });
+    }
   }
 
   exportLogs(): void {

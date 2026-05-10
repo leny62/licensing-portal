@@ -6,6 +6,107 @@
   gap: 0.55rem;
 }
 
+.table-skeleton {
+  display: grid;
+  background: #fff;
+}
+
+.skeleton-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #edf1f7;
+  background: linear-gradient(90deg, rgb(33 55 105 / 5%), #fff);
+  padding: 0.85rem 1rem;
+}
+
+.skeleton-title,
+.skeleton-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.skeleton-title {
+  flex-direction: column;
+  align-items: flex-start;
+
+  span:first-child {
+    width: 10rem;
+    height: 0.95rem;
+  }
+
+  span:last-child {
+    width: 7rem;
+    height: 0.7rem;
+  }
+}
+
+.skeleton-search {
+  width: min(22rem, 58vw);
+  height: 42px;
+  border-radius: 10px;
+}
+
+.skeleton-filter {
+  width: 7.5rem;
+  height: 42px;
+  border-radius: 10px;
+}
+
+.skeleton-table {
+  display: grid;
+  overflow-x: auto;
+}
+
+.skeleton-row {
+  display: grid;
+  min-width: 680px;
+  gap: 1.2rem;
+  border-bottom: 1px solid #edf1f7;
+  padding: 1rem;
+
+  span {
+    height: 0.85rem;
+    border-radius: 999px;
+  }
+}
+
+.skeleton-head {
+  background: #f8fafc;
+
+  span {
+    height: 0.7rem;
+  }
+}
+
+.skeleton-title span,
+.skeleton-search,
+.skeleton-filter,
+.skeleton-row span {
+  position: relative;
+  overflow: hidden;
+  background: #eef2f7;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    animation: shimmer 1.15s infinite;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 72%), transparent);
+    content: '';
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .search-box {
   display: inline-flex;
   min-width: min(22rem, 100%);

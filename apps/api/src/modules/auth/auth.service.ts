@@ -103,6 +103,13 @@ export class AuthService {
     await this.refreshTokensService.logout(refreshToken);
   }
 
+  async requestPasswordReset(email: string): Promise<void> {
+    await this.prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+      select: { id: true },
+    });
+  }
+
   async changePassword(
     userId: string,
     currentPassword: string,
