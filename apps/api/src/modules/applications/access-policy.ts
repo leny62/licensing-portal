@@ -1,4 +1,4 @@
-import { Application, UserRole } from '@prisma/client';
+import { Application, ApplicationState, UserRole } from '@prisma/client';
 
 import { ApplicationActor } from './interfaces/application-actor.interface';
 
@@ -12,13 +12,13 @@ export const canViewApplication = (actor: ApplicationActor, application: Applica
   }
 
   if (actor.role === UserRole.REVIEWER) {
-    return application.reviewerId === actor.id || application.state === 'SUBMITTED';
+    return application.reviewerId === actor.id || application.state === ApplicationState.SUBMITTED;
   }
 
   if (actor.role === UserRole.APPROVER) {
     return (
-      application.state === 'RECOMMENDED_FOR_APPROVAL' ||
-      application.state === 'RECOMMENDED_FOR_REJECTION' ||
+      application.state === ApplicationState.RECOMMENDED_FOR_APPROVAL ||
+      application.state === ApplicationState.RECOMMENDED_FOR_REJECTION ||
       application.approverId === actor.id
     );
   }
@@ -30,6 +30,6 @@ export const canEditDraft = (actor: ApplicationActor, application: Application):
   return (
     actor.role === UserRole.APPLICANT &&
     application.applicantId === actor.id &&
-    application.state === 'DRAFT'
+    application.state === ApplicationState.DRAFT
   );
 };

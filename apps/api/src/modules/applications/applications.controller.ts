@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -18,6 +19,7 @@ import {
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ApplicationResponse } from './interfaces/application-response.interface';
 
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('applications')
 export class ApplicationsController {

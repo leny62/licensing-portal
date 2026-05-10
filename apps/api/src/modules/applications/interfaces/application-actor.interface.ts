@@ -1,5 +1,7 @@
 import { ApplicationState, UserRole } from '@prisma/client';
 
+import { ApplicationAction } from '../enums/application-action.enum';
+
 export interface ApplicationActor {
   id: string;
   role: UserRole;
@@ -13,18 +15,6 @@ export interface ApplicationTransitionContext {
   hasRequiredDocuments: boolean;
   hasDocumentAfterLastRequest: boolean;
 }
-
-export type ApplicationAction =
-  | 'submit'
-  | 'withdraw'
-  | 'claim'
-  | 'assign'
-  | 'request_info'
-  | 'resubmit'
-  | 'recommend_approval'
-  | 'recommend_rejection'
-  | 'approve'
-  | 'reject';
 
 export interface TransitionInput {
   currentState: ApplicationState;

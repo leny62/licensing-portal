@@ -9,7 +9,8 @@ import { canEditDraft, canViewApplication } from './access-policy';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ListApplicationsQueryDto } from './dto/transition.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
-import { ApplicationAction } from './interfaces/application-actor.interface';
+import { ApplicationAction } from './enums/application-action.enum';
+import { ApplicationDecision } from './enums/application-decision.enum';
 import { ApplicationResponse } from './interfaces/application-response.interface';
 import { transitionApplication } from './state-machine';
 
@@ -51,7 +52,7 @@ export class ApplicationsService {
     const applications = await this.prisma.application.findMany({
       where: {
         ...this.roleScopedWhere(actor),
-        ...(query.state !== undefined ? { state: query.state as ApplicationState } : {}),
+        ...(query.state !== undefined ? { state: query.state } : {}),
         ...(query.reviewerId !== undefined ? { reviewerId: query.reviewerId } : {}),
         ...(query.q !== undefined ? { referenceNumber: { contains: query.q } } : {}),
       },
@@ -89,15 +90,15 @@ export class ApplicationsService {
   }
 
   async submit(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'submit', {});
+    return this.transition(actor, id, ApplicationAction.Submit, {});
   }
 
   async withdraw(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'withdraw', {});
+    return this.transition(actor, id, ApplicationAction.Withdraw, {});
   }
 
   async claim(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'claim', { reviewerId: actor.id });
+    return this.transition(actor, id, ApplicationAction.Claim, { reviewerId: actor.id });
   }
 
   async assign(
@@ -105,7 +106,7 @@ export class ApplicationsService {
     id: string,
     reviewerId: string,
   ): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'assign', { reviewerId });
+    return this.transition(actor, id, ApplicationAction.Assign, { reviewerId });
   }
 
   async requestInfo(
@@ -113,23 +114,25 @@ export class ApplicationsService {
     id: string,
     justification: string,
   ): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'request_info', { justification });
+    return this.transition(actor, id, ApplicationAction.RequestInfo, { justification });
   }
 
   async resubmit(actor: AuthenticatedUser, id: string): Promise<ApplicationResponse> {
-    return this.transition(actor, id, 'resubmit', { lastResubmitAt: new Date() });
+    return this.transition(actor, id, ApplicationAction.Resubmit, { lastResubmitAt: new Date() });
   }
 
   async recommend(
     actor: AuthenticatedUser,
     id: string,
-    recommendation: 'APPROVE' | 'REJECT',
+    recommendation: ApplicationDecision,
     justification: string,
   ): Promise<ApplicationResponse> {
     return this.transition(
       actor,
       id,
-      recommendation === 'APPROVE' ? 'recommend_approval' : 'recommend_rejection',
+      recommendation === ApplicationDecision.Approve
+        ? ApplicationAction.RecommendApproval
+        : ApplicationAction.RecommendRejection,
       { justification },
     );
   }
@@ -137,14 +140,21 @@ export class ApplicationsService {
   async decide(
     actor: AuthenticatedUser,
     id: string,
-    decision: 'APPROVE' | 'REJECT',
+    decision: ApplicationDecision,
     justification: string,
   ): Promise<ApplicationResponse> {
-    return this.transition(actor, id, decision === 'APPROVE' ? 'approve' : 'reject', {
-      approverId: actor.id,
-      decidedAt: new Date(),
-      justification,
-    });
+    return this.transition(
+      actor,
+      id,
+      decision === ApplicationDecision.Approve
+        ? ApplicationAction.Approve
+        : ApplicationAction.Reject,
+      {
+        approverId: actor.id,
+        decidedAt: new Date(),
+        justification,
+      },
+    );
   }
 
   private async transition(
@@ -200,7 +210,7 @@ export class ApplicationsService {
           ...(data.justification !== undefined ? { justification: data.justification } : {}),
           ...(data.decidedAt !== undefined ? { decidedAt: data.decidedAt } : {}),
           ...(data.lastResubmitAt !== undefined ? { lastResubmitAt: data.lastResubmitAt } : {}),
-          ...(action === 'submit' ? { submittedAt: new Date() } : {}),
+          ...(action === ApplicationAction.Submit ? { submittedAt: new Date() } : {}),
         },
       });
 
@@ -231,7 +241,13 @@ export class ApplicationsService {
     const auditRows = await tx.applicationAudit.findMany({
       where: {
         applicationId: application.id,
-        action: { in: ['claim', 'recommend_approval', 'recommend_rejection'] },
+        action: {
+          in: [
+            ApplicationAction.Claim,
+            ApplicationAction.RecommendApproval,
+            ApplicationAction.RecommendRejection,
+          ],
+        },
         actorId: { not: null },
       },
       select: { actorId: true },

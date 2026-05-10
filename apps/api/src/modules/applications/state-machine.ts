@@ -5,6 +5,7 @@ import {
   IllegalTransitionError,
   SeparationOfDutiesError,
 } from '../../common/errors/domain.errors';
+import { ApplicationAction } from './enums/application-action.enum';
 import { TransitionInput, TransitionResult } from './interfaces/application-actor.interface';
 
 const terminalStates = new Set<ApplicationState>([
@@ -13,12 +14,12 @@ const terminalStates = new Set<ApplicationState>([
   ApplicationState.WITHDRAWN,
 ]);
 
-const actionsRequiringJustification = new Set([
-  'request_info',
-  'recommend_approval',
-  'recommend_rejection',
-  'approve',
-  'reject',
+const actionsRequiringJustification = new Set<ApplicationAction>([
+  ApplicationAction.RequestInfo,
+  ApplicationAction.RecommendApproval,
+  ApplicationAction.RecommendRejection,
+  ApplicationAction.Approve,
+  ApplicationAction.Reject,
 ]);
 
 export const transitionApplication = (input: TransitionInput): TransitionResult => {
@@ -38,7 +39,7 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
   }
 
   switch (input.action) {
-    case 'submit':
+    case ApplicationAction.Submit:
       requireState(input, ApplicationState.DRAFT);
       requireActor(input, UserRole.APPLICANT);
       requireApplicantOwns(input);
@@ -47,7 +48,7 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       }
       return { nextState: ApplicationState.SUBMITTED };
 
-    case 'withdraw':
+    case ApplicationAction.Withdraw:
       requireActor(input, UserRole.APPLICANT);
       requireApplicantOwns(input);
       if (
@@ -58,23 +59,23 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       }
       return { nextState: ApplicationState.WITHDRAWN };
 
-    case 'claim':
+    case ApplicationAction.Claim:
       requireState(input, ApplicationState.SUBMITTED);
       requireActor(input, UserRole.REVIEWER);
       requireReviewerNotPreviouslyAssigned(input);
       return { nextState: ApplicationState.UNDER_REVIEW };
 
-    case 'assign':
+    case ApplicationAction.Assign:
       requireState(input, ApplicationState.SUBMITTED);
       requireActor(input, UserRole.ADMIN);
       return { nextState: ApplicationState.UNDER_REVIEW };
 
-    case 'request_info':
+    case ApplicationAction.RequestInfo:
       requireState(input, ApplicationState.UNDER_REVIEW);
       requireAssignedReviewer(input);
       return { nextState: ApplicationState.CHANGES_REQUESTED };
 
-    case 'resubmit':
+    case ApplicationAction.Resubmit:
       requireState(input, ApplicationState.CHANGES_REQUESTED);
       requireActor(input, UserRole.APPLICANT);
       requireApplicantOwns(input);
@@ -83,23 +84,23 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       }
       return { nextState: ApplicationState.UNDER_REVIEW };
 
-    case 'recommend_approval':
+    case ApplicationAction.RecommendApproval:
       requireState(input, ApplicationState.UNDER_REVIEW);
       requireAssignedReviewer(input);
       return { nextState: ApplicationState.RECOMMENDED_FOR_APPROVAL };
 
-    case 'recommend_rejection':
+    case ApplicationAction.RecommendRejection:
       requireState(input, ApplicationState.UNDER_REVIEW);
       requireAssignedReviewer(input);
       return { nextState: ApplicationState.RECOMMENDED_FOR_REJECTION };
 
-    case 'approve':
+    case ApplicationAction.Approve:
       requireApproverDecisionState(input);
       requireActor(input, UserRole.APPROVER);
       requireSeparationOfDuties(input);
       return { nextState: ApplicationState.APPROVED };
 
-    case 'reject':
+    case ApplicationAction.Reject:
       requireApproverDecisionState(input);
       requireActor(input, UserRole.APPROVER);
       requireSeparationOfDuties(input);

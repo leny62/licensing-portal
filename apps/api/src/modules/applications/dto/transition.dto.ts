@@ -1,40 +1,76 @@
-import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApplicationState } from '@prisma/client';
+import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+
+import { ApplicationDecision } from '../enums/application-decision.enum';
 
 export class JustificationDto {
+  @ApiProperty({
+    example: 'Additional supporting evidence is required before review can continue.',
+  })
   @IsString()
   justification!: string;
 }
 
 export class AssignReviewerDto {
+  @ApiProperty({
+    example: '2f6a3d44-40f8-4a0d-a0c0-4a3878a70b2a',
+    format: 'uuid',
+  })
   @IsUUID()
   reviewerId!: string;
 }
 
 export class RecommendationDto {
-  @IsIn(['APPROVE', 'REJECT'])
-  recommendation!: 'APPROVE' | 'REJECT';
+  @ApiProperty({
+    enum: ApplicationDecision,
+    example: ApplicationDecision.Approve,
+  })
+  @IsEnum(ApplicationDecision)
+  recommendation!: ApplicationDecision;
 
+  @ApiProperty({
+    example: 'Applicant meets the documented eligibility requirements.',
+  })
   @IsString()
   justification!: string;
 }
 
 export class DecisionDto {
-  @IsIn(['APPROVE', 'REJECT'])
-  decision!: 'APPROVE' | 'REJECT';
+  @ApiProperty({
+    enum: ApplicationDecision,
+    example: ApplicationDecision.Approve,
+  })
+  @IsEnum(ApplicationDecision)
+  decision!: ApplicationDecision;
 
+  @ApiProperty({
+    example: 'Final approval granted after review committee assessment.',
+  })
   @IsString()
   justification!: string;
 }
 
 export class ListApplicationsQueryDto {
+  @ApiPropertyOptional({
+    enum: ApplicationState,
+    example: ApplicationState.UNDER_REVIEW,
+  })
   @IsOptional()
-  @IsString()
-  state?: string;
+  @IsEnum(ApplicationState)
+  state?: ApplicationState;
 
+  @ApiPropertyOptional({
+    example: '2f6a3d44-40f8-4a0d-a0c0-4a3878a70b2a',
+    format: 'uuid',
+  })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   reviewerId?: string;
 
+  @ApiPropertyOptional({
+    example: 'APP-20260510',
+  })
   @IsOptional()
   @IsString()
   q?: string;

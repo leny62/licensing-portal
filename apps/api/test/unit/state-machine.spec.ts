@@ -5,12 +5,13 @@ import {
   IllegalTransitionError,
   SeparationOfDutiesError,
 } from '../../src/common/errors/domain.errors';
+import { ApplicationAction } from '../../src/modules/applications/enums/application-action.enum';
 import { TransitionInput } from '../../src/modules/applications/interfaces/application-actor.interface';
 import { transitionApplication } from '../../src/modules/applications/state-machine';
 
 const baseInput = (overrides: Partial<TransitionInput> = {}): TransitionInput => ({
   currentState: ApplicationState.DRAFT,
-  action: 'submit',
+  action: ApplicationAction.Submit,
   actor: { id: 'applicant-1', role: UserRole.APPLICANT },
   context: {
     applicationId: 'application-1',
@@ -25,42 +26,62 @@ const baseInput = (overrides: Partial<TransitionInput> = {}): TransitionInput =>
 
 describe('transitionApplication', () => {
   it.each([
-    ['submit', ApplicationState.DRAFT, UserRole.APPLICANT, ApplicationState.SUBMITTED],
-    ['withdraw', ApplicationState.DRAFT, UserRole.APPLICANT, ApplicationState.WITHDRAWN],
-    ['claim', ApplicationState.SUBMITTED, UserRole.REVIEWER, ApplicationState.UNDER_REVIEW],
-    ['assign', ApplicationState.SUBMITTED, UserRole.ADMIN, ApplicationState.UNDER_REVIEW],
     [
-      'request_info',
+      ApplicationAction.Submit,
+      ApplicationState.DRAFT,
+      UserRole.APPLICANT,
+      ApplicationState.SUBMITTED,
+    ],
+    [
+      ApplicationAction.Withdraw,
+      ApplicationState.DRAFT,
+      UserRole.APPLICANT,
+      ApplicationState.WITHDRAWN,
+    ],
+    [
+      ApplicationAction.Claim,
+      ApplicationState.SUBMITTED,
+      UserRole.REVIEWER,
+      ApplicationState.UNDER_REVIEW,
+    ],
+    [
+      ApplicationAction.Assign,
+      ApplicationState.SUBMITTED,
+      UserRole.ADMIN,
+      ApplicationState.UNDER_REVIEW,
+    ],
+    [
+      ApplicationAction.RequestInfo,
       ApplicationState.UNDER_REVIEW,
       UserRole.REVIEWER,
       ApplicationState.CHANGES_REQUESTED,
     ],
     [
-      'resubmit',
+      ApplicationAction.Resubmit,
       ApplicationState.CHANGES_REQUESTED,
       UserRole.APPLICANT,
       ApplicationState.UNDER_REVIEW,
     ],
     [
-      'recommend_approval',
+      ApplicationAction.RecommendApproval,
       ApplicationState.UNDER_REVIEW,
       UserRole.REVIEWER,
       ApplicationState.RECOMMENDED_FOR_APPROVAL,
     ],
     [
-      'recommend_rejection',
+      ApplicationAction.RecommendRejection,
       ApplicationState.UNDER_REVIEW,
       UserRole.REVIEWER,
       ApplicationState.RECOMMENDED_FOR_REJECTION,
     ],
     [
-      'approve',
+      ApplicationAction.Approve,
       ApplicationState.RECOMMENDED_FOR_APPROVAL,
       UserRole.APPROVER,
       ApplicationState.APPROVED,
     ],
     [
-      'reject',
+      ApplicationAction.Reject,
       ApplicationState.RECOMMENDED_FOR_REJECTION,
       UserRole.APPROVER,
       ApplicationState.REJECTED,
@@ -77,7 +98,7 @@ describe('transitionApplication', () => {
           applicationId: 'application-1',
           applicantId: 'applicant-1',
           reviewerId: role === UserRole.REVIEWER ? actorId : 'reviewer-1',
-          reviewerHistoryIds: action === 'claim' ? [] : ['reviewer-1'],
+          reviewerHistoryIds: action === ApplicationAction.Claim ? [] : ['reviewer-1'],
           hasRequiredDocuments: true,
           hasDocumentAfterLastRequest: true,
         },
@@ -91,7 +112,7 @@ describe('transitionApplication', () => {
     expect(() =>
       transitionApplication(
         baseInput({
-          action: 'approve',
+          action: ApplicationAction.Approve,
           currentState: ApplicationState.SUBMITTED,
           actor: { id: 'approver-1', role: UserRole.APPROVER },
           justification: 'Approved.',
@@ -105,7 +126,7 @@ describe('transitionApplication', () => {
       transitionApplication(
         baseInput({
           currentState: ApplicationState.APPROVED,
-          action: 'withdraw',
+          action: ApplicationAction.Withdraw,
         }),
       ),
     ).toThrow(IllegalTransitionError);
@@ -116,7 +137,7 @@ describe('transitionApplication', () => {
       transitionApplication(
         baseInput({
           currentState: ApplicationState.RECOMMENDED_FOR_APPROVAL,
-          action: 'approve',
+          action: ApplicationAction.Approve,
           actor: { id: 'reviewer-1', role: UserRole.APPROVER },
           justification: 'Approved.',
         }),
@@ -129,7 +150,7 @@ describe('transitionApplication', () => {
       transitionApplication(
         baseInput({
           currentState: ApplicationState.UNDER_REVIEW,
-          action: 'recommend_approval',
+          action: ApplicationAction.RecommendApproval,
           actor: { id: 'reviewer-1', role: UserRole.REVIEWER },
         }),
       ),

@@ -2,9 +2,15 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { FastifyRequest } from 'fastify';
 
 import { PrismaService } from '../../../infra/prisma/prisma.service';
+import { ApplicationAction } from '../../applications/enums/application-action.enum';
 import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
 
-const REVIEWER_AUDIT_ACTIONS = ['claim', 'assign', 'recommend_approval', 'recommend_rejection'];
+const REVIEWER_AUDIT_ACTIONS = [
+  ApplicationAction.Claim,
+  ApplicationAction.Assign,
+  ApplicationAction.RecommendApproval,
+  ApplicationAction.RecommendRejection,
+];
 
 @Injectable()
 export class SeparationOfDutiesGuard implements CanActivate {

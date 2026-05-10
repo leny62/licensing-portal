@@ -1,4 +1,5 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuditChainVerificationResult } from '../../infra/audit/interfaces/audit-entry.interface';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -7,6 +8,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { AuditReaderService } from './audit-reader.service';
 import { ApplicationAuditResponse } from './interfaces/audit-response.interface';
 
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('applications/:applicationId/audit')
 export class AuditController {

@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -35,6 +36,7 @@ export class AuthController {
     return this.authService.completeMfaLogin(body.mfaToken, body.code, body.deviceId);
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('mfa/enrol')
   @HttpCode(HttpStatus.CREATED)
@@ -56,6 +58,7 @@ export class AuthController {
     await this.authService.logout(body.refreshToken);
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('password')
   @HttpCode(HttpStatus.NO_CONTENT)
