@@ -14,30 +14,75 @@ packages/api-types  shared types generated from the API's OpenAPI document
 
 - Node 20 LTS
 - npm 10+
-- Docker (for the local Postgres instance and the integration test database)
+- PostgreSQL 16 for local development. PostgreSQL 14 works for basic local smoke testing, but 16 is the target runtime.
+- Docker for integration tests that use Testcontainers.
 
 ## API
 
+All commands below are run from the monorepo root.
+
 ```bash
-cd apps/api
-cp .env.example .env
-docker compose up -d postgres
 npm install
-npm run db:migrate
-npm run db:seed
-npm run start:dev
+cp apps/api/.env.example apps/api/.env
 ```
 
-API on `http://localhost:3000`. OpenAPI at `/api/docs`.
-
-From the monorepo root:
+Generate local development secrets:
 
 ```bash
-npm install
-npm run api:migrate
-npm run api:seed
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/licensing-jwt-private.pem
+openssl rsa -pubout -in /tmp/licensing-jwt-private.pem -out /tmp/licensing-jwt-public.pem
+
+JWT_PRIVATE_KEY_BASE64=$(openssl base64 -A -in /tmp/licensing-jwt-private.pem)
+JWT_PUBLIC_KEY_BASE64=$(openssl base64 -A -in /tmp/licensing-jwt-public.pem)
+DOCUMENT_KEK_BASE64=$(openssl rand -base64 32)
+
+printf '%s\n' "$JWT_PRIVATE_KEY_BASE64"
+printf '%s\n' "$JWT_PUBLIC_KEY_BASE64"
+printf '%s\n' "$DOCUMENT_KEK_BASE64"
+```
+
+Paste those values into `apps/api/.env`:
+
+```env
+JWT_PRIVATE_KEY_BASE64=<base64 private key>
+JWT_PUBLIC_KEY_BASE64=<base64 public key>
+DOCUMENT_KEK_BASE64=<base64 32-byte key>
+```
+
+Copy only the base64 text.
+
+Use the local database URL:
+
+```env
+DATABASE_URL=postgresql://licensing:licensing@localhost:5432/licensing_portal?schema=public
+```
+
+Run Prisma and start the API:
+
+```bash
+npm run prisma:migrate
+npm run prisma:generate
 npm run api:dev
 ```
+
+API on `http://localhost:3000/api/v1`. OpenAPI at `http://localhost:3000/api/docs`.
+
+Seed local demo data:
+
+```bash
+npm run prisma:seed
+```
+
+The seed is idempotent and creates one user per role:
+
+```text
+applicant@licensing.local
+reviewer@licensing.local
+approver@licensing.local
+admin@licensing.local
+```
+
+The default password is `LocalPass123!`. Reviewer, approver, and admin logins require MFA; use the seeded recovery code `LOCAL-RECOVERY-0001`. Run `npm run prisma:seed` again to reset consumed recovery codes.
 
 ## Tests
 

@@ -9,14 +9,10 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { buildErrorResponse } from '../dto/error-response.dto';
+import { ErrorCode } from '../enums/error-code.enum';
 import { DomainError } from '../errors/domain.errors';
+import { ValidationErrorBody } from '../interfaces/validation-error-body.interface';
 import { CORRELATION_ID_HEADER } from '../interceptors/correlation-id.interceptor';
-
-interface ValidationErrorBody {
-  message: string | string[];
-  statusCode: number;
-  error?: string;
-}
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -80,7 +76,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     void reply
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .send(buildErrorResponse('INTERNAL_ERROR', 'An unexpected error occurred.', correlationId));
+      .send(
+        buildErrorResponse(ErrorCode.InternalError, 'An unexpected error occurred.', correlationId),
+      );
 
     void message;
   }
@@ -88,34 +86,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private resolveHttpException(
     status: number,
     body: string | object,
-  ): { code: string; message: string } {
+  ): { code: ErrorCode; message: string } {
     if (status === HttpStatus.BAD_REQUEST && typeof body === 'object' && body !== null) {
       const typed = body as ValidationErrorBody;
       const messages = Array.isArray(typed.message)
         ? typed.message.join('; ')
         : (typed.message ?? 'Validation failed.');
-      return { code: 'VALIDATION_ERROR', message: messages };
+      return { code: ErrorCode.ValidationError, message: messages };
     }
 
     if (status === HttpStatus.UNAUTHORIZED) {
-      return { code: 'UNAUTHORIZED', message: 'Authentication required.' };
+      return { code: ErrorCode.Unauthorized, message: 'Authentication required.' };
     }
 
     if (status === HttpStatus.FORBIDDEN) {
-      return { code: 'FORBIDDEN', message: 'Access denied.' };
+      return { code: ErrorCode.Forbidden, message: 'Access denied.' };
     }
 
     if (status === HttpStatus.NOT_FOUND) {
-      return { code: 'NOT_FOUND', message: 'Resource not found.' };
+      return { code: ErrorCode.NotFound, message: 'Resource not found.' };
     }
 
     if (status === HttpStatus.CONFLICT) {
-      return { code: 'CONFLICT', message: 'Resource conflict.' };
+      return { code: ErrorCode.Conflict, message: 'Resource conflict.' };
     }
 
     if (status === HttpStatus.UNPROCESSABLE_ENTITY) {
       return {
-        code: 'VALIDATION_ERROR',
+        code: ErrorCode.ValidationError,
         message: typeof body === 'string' ? body : 'Unprocessable entity.',
       };
     }
@@ -130,7 +128,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : 'Request failed.';
 
     return {
-      code: `HTTP_${status}`,
+      code: ErrorCode.RequestFailed,
       message,
     };
   }

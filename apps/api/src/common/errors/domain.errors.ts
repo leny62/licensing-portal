@@ -1,18 +1,4 @@
-export type ErrorCode =
-  | 'ILLEGAL_TRANSITION'
-  | 'VERSION_CONFLICT'
-  | 'SEPARATION_OF_DUTIES'
-  | 'MFA_REQUIRED'
-  | 'MFA_INVALID'
-  | 'MFA_REUSE'
-  | 'INVALID_CREDENTIALS'
-  | 'ACCOUNT_LOCKED'
-  | 'INACTIVE_ACCOUNT'
-  | 'REFRESH_TOKEN_REUSE'
-  | 'RESOURCE_NOT_FOUND'
-  | 'VALIDATION_ERROR'
-  | 'CONFLICT'
-  | 'INTERNAL_ERROR';
+import { ErrorCode } from '../enums/error-code.enum';
 
 export abstract class DomainError extends Error {
   abstract readonly code: ErrorCode;
@@ -29,12 +15,12 @@ export abstract class DomainError extends Error {
 }
 
 export class IllegalTransitionError extends DomainError {
-  readonly code = 'ILLEGAL_TRANSITION' as const;
+  readonly code = ErrorCode.IllegalTransition;
   readonly httpStatus = 409;
 }
 
 export class VersionConflictError extends DomainError {
-  readonly code = 'VERSION_CONFLICT' as const;
+  readonly code = ErrorCode.VersionConflict;
   readonly httpStatus = 409;
 
   constructor(applicationId?: string) {
@@ -46,12 +32,12 @@ export class VersionConflictError extends DomainError {
 }
 
 export class SeparationOfDutiesError extends DomainError {
-  readonly code = 'SEPARATION_OF_DUTIES' as const;
+  readonly code = ErrorCode.SeparationOfDuties;
   readonly httpStatus = 403;
 }
 
 export class MfaRequiredError extends DomainError {
-  readonly code = 'MFA_REQUIRED' as const;
+  readonly code = ErrorCode.MfaRequired;
   readonly httpStatus = 401;
 
   constructor() {
@@ -60,12 +46,12 @@ export class MfaRequiredError extends DomainError {
 }
 
 export class MfaInvalidError extends DomainError {
-  readonly code = 'MFA_INVALID' as const;
+  readonly code = ErrorCode.MfaInvalid;
   readonly httpStatus = 401;
 }
 
 export class MfaReuseError extends DomainError {
-  readonly code = 'MFA_REUSE' as const;
+  readonly code = ErrorCode.MfaReuse;
   readonly httpStatus = 401;
 
   constructor() {
@@ -74,7 +60,7 @@ export class MfaReuseError extends DomainError {
 }
 
 export class InvalidCredentialsError extends DomainError {
-  readonly code = 'INVALID_CREDENTIALS' as const;
+  readonly code = ErrorCode.InvalidCredentials;
   readonly httpStatus = 401;
 
   constructor() {
@@ -83,12 +69,12 @@ export class InvalidCredentialsError extends DomainError {
 }
 
 export class AccountLockedError extends DomainError {
-  readonly code = 'ACCOUNT_LOCKED' as const;
+  readonly code = ErrorCode.AccountLocked;
   readonly httpStatus = 401;
 }
 
 export class InactiveAccountError extends DomainError {
-  readonly code = 'INACTIVE_ACCOUNT' as const;
+  readonly code = ErrorCode.InactiveAccount;
   readonly httpStatus = 403;
 
   constructor() {
@@ -97,7 +83,7 @@ export class InactiveAccountError extends DomainError {
 }
 
 export class RefreshTokenReuseError extends DomainError {
-  readonly code = 'REFRESH_TOKEN_REUSE' as const;
+  readonly code = ErrorCode.RefreshTokenReuse;
   readonly httpStatus = 401;
 
   constructor() {
@@ -106,11 +92,11 @@ export class RefreshTokenReuseError extends DomainError {
 }
 
 export class ResourceNotFoundError extends DomainError {
-  readonly code = 'RESOURCE_NOT_FOUND' as const;
+  readonly code = ErrorCode.ResourceNotFound;
   readonly httpStatus = 404;
 }
 
 export class ConflictError extends DomainError {
-  readonly code = 'CONFLICT' as const;
+  readonly code = ErrorCode.Conflict;
   readonly httpStatus = 409;
 }

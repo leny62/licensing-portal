@@ -18,6 +18,14 @@ module.exports = {
         'no-secrets/no-secrets': 'off',
       },
     },
+    {
+      files: ['src/seed/**/*.ts'],
+      rules: {
+        'no-console': 'off',
+        'no-secrets/no-secrets': 'off',
+        'security/detect-non-literal-fs-filename': 'off',
+      },
+    },
   ],
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'off',
