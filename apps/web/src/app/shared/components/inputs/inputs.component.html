@@ -1,0 +1,84 @@
+@if (visible()) {
+  <div [formGroup]="group" class="input-shell">
+    @switch (field.type) {
+      @case ('textarea') {
+        <label class="field-label" [for]="field.name">{{ field.label }}</label>
+        <mat-form-field appearance="outline" class="portal-field" subscriptSizing="dynamic">
+          <mat-icon matPrefix aria-hidden="true">{{ icon() }}</mat-icon>
+          <textarea
+            matInput
+            [id]="field.name"
+            rows="4"
+            [formControlName]="field.name"
+            [placeholder]="field.placeholder ?? ''"
+            [readonly]="field.readOnly"
+          ></textarea>
+          @if (field.hint) {
+            <mat-hint>{{ field.hint }}</mat-hint>
+          }
+          @if (group.get(field.name)?.invalid && group.get(field.name)?.touched) {
+            <mat-error>{{ errorMessage() }}</mat-error>
+          }
+        </mat-form-field>
+      }
+      @case ('select') {
+        <label class="field-label" [for]="field.name">{{ field.label }}</label>
+        <mat-form-field appearance="outline" class="portal-field" subscriptSizing="dynamic">
+          <mat-icon matPrefix aria-hidden="true">{{ icon() }}</mat-icon>
+          <mat-select [id]="field.name" [formControlName]="field.name">
+            @for (option of options(); track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+          @if (group.get(field.name)?.invalid && group.get(field.name)?.touched) {
+            <mat-error>{{ errorMessage() }}</mat-error>
+          }
+        </mat-form-field>
+      }
+      @case ('checkbox') {
+        <div class="checkbox-card">
+          <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+          <div>
+            <mat-checkbox [formControlName]="field.name">{{ field.label }}</mat-checkbox>
+            @if (field.hint) {
+              <p>{{ field.hint }}</p>
+            }
+          </div>
+        </div>
+      }
+      @case ('file') {
+        <div class="file-card">
+          <div class="file-icon">
+            <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-900">{{ field.label }}</p>
+            <p class="mt-1 text-sm text-gray-500">
+              Document upload will be enabled when the backend route is available.
+            </p>
+          </div>
+        </div>
+      }
+      @default {
+        <label class="field-label" [for]="field.name">{{ field.label }}</label>
+        <mat-form-field appearance="outline" class="portal-field" subscriptSizing="dynamic">
+          <mat-icon matPrefix aria-hidden="true">{{ icon() }}</mat-icon>
+          <input
+            matInput
+            [id]="field.name"
+            [type]="inputType()"
+            [formControlName]="field.name"
+            [placeholder]="field.placeholder ?? ''"
+            [readonly]="field.readOnly"
+          />
+          @if (field.hint) {
+            <mat-hint>{{ field.hint }}</mat-hint>
+          }
+          @if (group.get(field.name)?.invalid && group.get(field.name)?.touched) {
+            <mat-error>{{ errorMessage() }}</mat-error>
+          }
+        </mat-form-field>
+      }
+    }
+  </div>
+}

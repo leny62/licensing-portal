@@ -1,0 +1,15 @@
+appId: com.licensingportal.desktop
+productName: Bank Licensing Portal
+asar: true
+files:
+  - dist/**
+  - dist-electron/**
+directories:
+  output: release
+win:
+  target: nsis
+mac:
+  target: dmg
+linux:
+  target: AppImage
+publish: null

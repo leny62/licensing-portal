@@ -1,0 +1,20 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Ready queue</h1>
+      <p class="page-copy">Applications waiting for a final decision.</p>
+    </div>
+  </header>
+
+  @if (hasError) {
+    <app-error-state (retry)="load()"></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="applications"
+      [isLoading]="isLoading"
+      (actionClick)="handleAction($event)"
+      (searchChange)="handleSearch($event)"
+    ></app-table>
+  }
+</div>

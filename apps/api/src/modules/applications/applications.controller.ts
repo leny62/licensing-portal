@@ -17,6 +17,7 @@ import {
   RecommendationDto,
 } from './dto/transition.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { PagedResponse } from '../../common/interfaces/paged-response.interface';
 import { ApplicationResponse } from './interfaces/application-response.interface';
 
 @ApiBearerAuth()
@@ -38,7 +39,7 @@ export class ApplicationsController {
   async list(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: ListApplicationsQueryDto,
-  ): Promise<ApplicationResponse[]> {
+  ): Promise<PagedResponse<ApplicationResponse>> {
     return this.applicationsService.list(user, query);
   }
 

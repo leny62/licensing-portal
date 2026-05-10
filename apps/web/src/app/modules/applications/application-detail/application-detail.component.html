@@ -1,0 +1,187 @@
+<div class="page-shell">
+  @if (isLoading) {
+    <app-loading-state label="Loading application"></app-loading-state>
+  } @else if (hasError || application === null) {
+    <app-error-state title="Application unavailable" (retry)="load()"></app-error-state>
+  } @else {
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ application.referenceNumber }}</h1>
+        <p class="page-copy">
+          {{ application.institutionName }} · updated {{ formatted(application.updatedAt) }}
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <app-status-badge [state]="application.state"></app-status-badge>
+        <app-button variant="secondary" icon="verified" (click)="verifyAudit()"
+          >Verify audit</app-button
+        >
+      </div>
+    </header>
+
+    <section class="grid gap-4 lg:grid-cols-[1fr_380px]">
+      <div class="space-y-4">
+        <section class="surface p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Application summary</h2>
+          <dl class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Legal form</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ application.legalForm }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Country</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ application.country }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Contact</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ application.contactPerson }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium uppercase text-gray-500">Email</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ application.contactEmail }}</dd>
+            </div>
+          </dl>
+          <p class="mt-4 text-sm leading-6 text-gray-700">{{ application.summary }}</p>
+        </section>
+
+        <section class="surface p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-sm font-semibold text-gray-900">Documents</h2>
+              <p class="text-sm text-gray-500">
+                Upload and download routes are pending on the backend.
+              </p>
+            </div>
+            <app-button variant="neutral" icon="lock" [disabled]="true">Unavailable</app-button>
+          </div>
+        </section>
+
+        <section class="surface p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Audit timeline</h2>
+          <ol class="mt-4 space-y-3">
+            @for (entry of audit; track entry.id) {
+              <li class="rounded-lg border border-gray-200 p-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">{{ entry.action }}</p>
+                    @if (entry.justification) {
+                      <p class="mt-1 text-sm text-gray-600">{{ entry.justification }}</p>
+                    }
+                  </div>
+                  <span class="shrink-0 text-xs text-gray-500">{{
+                    formatted(entry.occurredAt)
+                  }}</span>
+                </div>
+              </li>
+            } @empty {
+              <li class="text-sm text-gray-500">No audit entries are visible yet.</li>
+            }
+          </ol>
+        </section>
+      </div>
+
+      <aside class="space-y-4">
+        @if (canClaim()) {
+          <section class="surface p-5">
+            <h2 class="text-sm font-semibold text-gray-900">Reviewer queue</h2>
+            <p class="mt-1 text-sm text-gray-500">
+              Claim this submitted application to start review.
+            </p>
+            <div class="mt-4">
+              <app-button icon="assignment_ind" [loading]="actionLoading" (click)="claim()"
+                >Claim</app-button
+              >
+            </div>
+          </section>
+        }
+
+        @if (user()?.role === UserRole.Admin) {
+          <section class="surface p-5">
+            <h2 class="text-sm font-semibold text-gray-900">Assign reviewer</h2>
+            <form [formGroup]="assignForm" class="mt-4 space-y-3" (ngSubmit)="assign()">
+              <mat-form-field appearance="outline">
+                <mat-label>Reviewer</mat-label>
+                <mat-select formControlName="reviewerId">
+                  @for (reviewer of reviewers; track reviewer.id) {
+                    <mat-option [value]="reviewer.id">{{ reviewer.fullName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <app-button type="submit" icon="person_add" [loading]="actionLoading"
+                >Assign</app-button
+              >
+            </form>
+          </section>
+        }
+
+        @if (canReview() || canDecide()) {
+          <section class="surface p-5">
+            <h2 class="text-sm font-semibold text-gray-900">
+              @if (canReview()) {
+                Review action
+              } @else {
+                Final decision
+              }
+            </h2>
+            <form [formGroup]="reviewForm" class="mt-4 space-y-3">
+              <mat-form-field appearance="outline">
+                <mat-label>Justification</mat-label>
+                <textarea matInput rows="5" formControlName="justification"></textarea>
+              </mat-form-field>
+
+              @if (canReview()) {
+                <div class="flex flex-wrap gap-2">
+                  <app-button
+                    variant="secondary"
+                    icon="help"
+                    [loading]="actionLoading"
+                    (click)="requestInfo()"
+                  >
+                    Request info
+                  </app-button>
+                  <app-button
+                    variant="success"
+                    icon="thumb_up"
+                    [loading]="actionLoading"
+                    (click)="recommend(ApplicationDecision.Approve)"
+                  >
+                    Recommend approval
+                  </app-button>
+                  <app-button
+                    variant="danger"
+                    icon="thumb_down"
+                    [loading]="actionLoading"
+                    (click)="recommend(ApplicationDecision.Reject)"
+                  >
+                    Recommend rejection
+                  </app-button>
+                </div>
+              }
+
+              @if (canDecide()) {
+                <div class="flex flex-wrap gap-2">
+                  <app-button
+                    variant="success"
+                    icon="check"
+                    [loading]="actionLoading"
+                    (click)="decide(ApplicationDecision.Approve)"
+                  >
+                    Approve
+                  </app-button>
+                  <app-button
+                    variant="danger"
+                    icon="close"
+                    [loading]="actionLoading"
+                    (click)="decide(ApplicationDecision.Reject)"
+                  >
+                    Reject
+                  </app-button>
+                </div>
+              }
+            </form>
+          </section>
+        }
+      </aside>
+    </section>
+  }
+</div>

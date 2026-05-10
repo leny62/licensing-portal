@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 
 import { ConflictError, ResourceNotFoundError } from '../../common/errors/domain.errors';
+import { PagedResponse } from '../../common/interfaces/paged-response.interface';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { PasswordHasher } from '../auth/password-hasher';
 import { RefreshTokensService } from '../auth/refresh-tokens.service';
@@ -22,24 +23,36 @@ export class UsersService {
     return this.mapUser(await this.findUserOrThrow(userId));
   }
 
-  async list(query: ListUsersQueryDto): Promise<UserResponse[]> {
-    const users = await this.prisma.user.findMany({
-      where: {
-        ...(query.role !== undefined ? { role: query.role } : {}),
-        ...(query.q !== undefined
-          ? {
-              OR: [
-                { email: { contains: query.q, mode: 'insensitive' } },
-                { fullName: { contains: query.q, mode: 'insensitive' } },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    });
+  async list(query: ListUsersQueryDto): Promise<PagedResponse<UserResponse>> {
+    const page = query.page ?? 0;
+    const size = query.size ?? 20;
 
-    return users.map((user) => this.mapUser(user));
+    const where: Prisma.UserWhereInput = {
+      ...(query.role !== undefined ? { role: query.role } : {}),
+      ...(query.q !== undefined
+        ? {
+            OR: [
+              { email: { contains: query.q, mode: 'insensitive' } },
+              { fullName: { contains: query.q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, users] = await this.prisma.$transaction([
+      this.prisma.user.count({ where }),
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: page * size,
+        take: size,
+      }),
+    ]);
+
+    return {
+      data: users.map((u) => this.mapUser(u)),
+      meta: { page, size, total, totalPages: Math.max(Math.ceil(total / size), 1) },
+    };
   }
 
   async create(dto: CreateUserDto): Promise<UserResponse> {

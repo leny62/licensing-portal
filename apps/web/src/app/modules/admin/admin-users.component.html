@@ -1,0 +1,25 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Users</h1>
+      <p class="page-copy">Provision users and manage account status.</p>
+    </div>
+    <app-button icon="person_add" (click)="create()">Create user</app-button>
+  </header>
+
+  @if (hasError) {
+    <app-error-state (retry)="load()"></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="users"
+      [isLoading]="isLoading"
+      [totalRecords]="totalRecords"
+      [totalPages]="totalPages"
+      (actionClick)="handleAction($event)"
+      (searchChange)="handleSearch($event)"
+      (filtersChange)="handleFilters($event)"
+      (pageChange)="handlePage($event)"
+    ></app-table>
+  }
+</div>

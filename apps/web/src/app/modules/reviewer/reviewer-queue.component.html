@@ -1,0 +1,23 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Review queue</h1>
+      <p class="page-copy">Submitted applications waiting for a reviewer.</p>
+    </div>
+  </header>
+
+  @if (hasError) {
+    <app-error-state (retry)="load()"></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="applications"
+      [isLoading]="isLoading"
+      [totalRecords]="totalRecords"
+      [totalPages]="totalPages"
+      (actionClick)="handleAction($event)"
+      (searchChange)="handleSearch($event)"
+      (pageChange)="handlePage($event)"
+    ></app-table>
+  }
+</div>

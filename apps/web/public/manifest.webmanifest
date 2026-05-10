@@ -1,0 +1,17 @@
+{
+  "name": "Bank Licensing and Compliance Portal",
+  "short_name": "Licensing Portal",
+  "theme_color": "#213769",
+  "background_color": "#F9FAFB",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

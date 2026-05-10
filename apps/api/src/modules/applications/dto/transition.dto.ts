@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApplicationState } from '@prisma/client';
-import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 import { ApplicationDecision } from '../enums/application-decision.enum';
 
@@ -74,4 +75,19 @@ export class ListApplicationsQueryDto {
   @IsOptional()
   @IsString()
   q?: string;
+
+  @ApiPropertyOptional({ example: 0, description: 'Zero-based page index', default: 0 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  page?: number;
+
+  @ApiPropertyOptional({ example: 20, description: 'Page size (max 50)', default: 20 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  size?: number;
 }

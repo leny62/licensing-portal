@@ -1,0 +1,22 @@
+<div class="max-h-[92vh] overflow-auto p-6">
+  <div class="mb-5 flex items-start justify-between gap-4">
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900">
+        @if (isEdit) {
+          Edit user
+        } @else {
+          Create user
+        }
+      </h2>
+      <p class="text-sm text-gray-500">Provision portal users and assign their role.</p>
+    </div>
+    <app-button variant="ghost" icon="close" (click)="close()">Close</app-button>
+  </div>
+
+  <app-formbuilder
+    [steps]="steps"
+    [initialData]="initialData"
+    [isLoading]="isSaving"
+    (submitForm)="submit($event)"
+  ></app-formbuilder>
+</div>

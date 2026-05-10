@@ -1,0 +1,19 @@
+<div class="page-shell">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Notifications</h1>
+      <p class="page-copy">Workflow updates and reviewer decisions.</p>
+    </div>
+  </header>
+
+  @if (hasError) {
+    <app-error-state (retry)="load()"></app-error-state>
+  } @else {
+    <app-table
+      [config]="config"
+      [data]="notifications"
+      [isLoading]="isLoading"
+      (actionClick)="handleAction($event)"
+    ></app-table>
+  }
+</div>

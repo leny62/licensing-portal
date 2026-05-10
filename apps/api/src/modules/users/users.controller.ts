@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@ne
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
+import { PagedResponse } from '../../common/interfaces/paged-response.interface';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,7 +28,7 @@ export class UsersController {
 
   @Roles(UserRole.ADMIN)
   @Get('users')
-  async list(@Query() query: ListUsersQueryDto): Promise<UserResponse[]> {
+  async list(@Query() query: ListUsersQueryDto): Promise<PagedResponse<UserResponse>> {
     return this.usersService.list(query);
   }
 

@@ -1,0 +1,61 @@
+<main class="login-page">
+  <section class="login-shell" aria-label="Licensing portal sign in">
+    <aside class="assurance-panel">
+      <div class="brand-row">
+        <div class="brand-mark">BL</div>
+        <div>
+          <p class="brand-kicker">Bank Licensing</p>
+          <h1>Licensing Portal</h1>
+        </div>
+      </div>
+
+      <div class="assurance-copy">
+        <p class="eyebrow">Secure workspace</p>
+        <h2>Review applications, decisions, and audit history from one controlled surface.</h2>
+        <p>
+          Access is role-scoped and every protected action is verified by the backend before it is
+          accepted.
+        </p>
+      </div>
+
+      <div class="assurance-grid">
+        <div>
+          <mat-icon aria-hidden="true">verified_user</mat-icon>
+          <span>Role-gated actions</span>
+        </div>
+        <div>
+          <mat-icon aria-hidden="true">fact_check</mat-icon>
+          <span>Append-only audit</span>
+        </div>
+        <div>
+          <mat-icon aria-hidden="true">lock</mat-icon>
+          <span>Encrypted documents</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="signin-panel">
+      <div class="signin-heading">
+        <p class="eyebrow">Authorised access</p>
+        <h2>Sign in</h2>
+        <p>Use your provisioned portal account.</p>
+      </div>
+
+      <form [formGroup]="form" class="signin-form" (ngSubmit)="submit()">
+        <app-inputs [field]="emailField" [group]="form"></app-inputs>
+        <app-inputs [field]="passwordField" [group]="form"></app-inputs>
+
+        @if (errorMessage) {
+          <p class="error-message" aria-live="polite">
+            <mat-icon aria-hidden="true">error_outline</mat-icon>
+            <span>{{ errorMessage }}</span>
+          </p>
+        }
+
+        <app-button class="signin-button" type="submit" variant="primary" [loading]="isLoading">
+          Sign in
+        </app-button>
+      </form>
+    </section>
+  </section>
+</main>

@@ -1,0 +1,58 @@
+.btn {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+.btn-primary {
+  background: #213769;
+  color: #fff;
+}
+
+.btn-secondary {
+  border-color: #d1d5db;
+  background: #fff;
+  color: #1f2937;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #213769;
+}
+
+.btn-neutral {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}

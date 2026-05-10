@@ -1,0 +1,17 @@
+<div
+  class="flex min-h-44 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center"
+>
+  <mat-icon class="text-gray-400" aria-hidden="true">{{ icon }}</mat-icon>
+  <p class="text-sm font-semibold text-gray-900">{{ title }}</p>
+  <p class="max-w-md text-sm text-gray-500">{{ message }}</p>
+  @if (actionLabel) {
+    <button
+      type="button"
+      class="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm"
+      (click)="actionClick.emit()"
+    >
+      {{ actionLabel }}
+    </button>
+  }
+  <ng-content></ng-content>
+</div>

@@ -11,7 +11,7 @@ const config: Config = {
     '^.+\\.(t|j)s$': [
       'ts-jest',
       {
-        tsconfig: path.join(__dirname, 'tsconfig.json'),
+        tsconfig: path.join(__dirname, 'tsconfig.spec.json'),
       },
     ],
   },
