@@ -72,3 +72,5 @@ ALTER TABLE "user_mfa_recovery_codes" ALTER COLUMN "id" DROP DEFAULT;
 -- AlterTable
 ALTER TABLE "users" ALTER COLUMN "id" DROP DEFAULT,
 ALTER COLUMN "updated_at" DROP DEFAULT;
+
+GRANT USAGE ON TYPE "DecisionType" TO licensing_app, licensing_migrate;
