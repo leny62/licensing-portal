@@ -26,6 +26,8 @@
     "web:e2e": "npm --workspace apps/web run e2e",
     "desktop:dev": "npm --workspace apps/web run desktop:dev",
     "desktop:package": "npm --workspace apps/web run desktop:package",
+    "deploy:contabo": "deployment/scripts/deploy-contabo.sh",
+    "backup:prod": "deployment/scripts/backup-postgres.sh",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"

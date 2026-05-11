@@ -7,8 +7,10 @@ Monorepo, npm workspaces.
 ```
 apps/api          NestJS + Prisma + PostgreSQL service
 apps/web          Angular + Electron client
-packages/api-types  shared types generated from the API's OpenAPI document
+design-documents  architecture diagrams and design document
 ```
+
+`packages/api-types` is reserved for generated OpenAPI client types. It is not required by the current API or web build.
 
 ## Prerequisites
 
@@ -139,6 +141,28 @@ npm run test
 
 Coverage is gated at 90% line and branch on the repo, with 95% line on the high-risk modules (state machine, audit, auth).
 
+## Deployment
+
+Contabo VPS deployment files live in `deployment/`. Production runs Postgres, the API, and the built Angular web app through Docker Compose. Host Nginx publishes the portal on a dedicated port for the shared Contabo VM.
+
+Production endpoints:
+
+```text
+Application: http://194.163.133.79:8091
+API:         http://194.163.133.79:8091/api/v1
+Health:      http://194.163.133.79:8091/api/v1/healthz
+Readiness:   http://194.163.133.79:8091/api/v1/readyz
+```
+
+The API is not exposed on a separate public port; it is routed under `/api/v1` through the same application port.
+
+```bash
+deployment/scripts/bootstrap-contabo.sh
+NGINX_MODE=port INSTALL_HOST_NGINX=true deployment/scripts/deploy-contabo.sh
+```
+
+The first deploy command creates `deployment/production.env` with generated secrets and exits. Review the port, CORS origin, and mail settings before running it again. See `deployment/README.md` for TLS, backups, and operations commands.
+
 ## Audit and logs
 
 - Application audit is legal-evidence oriented: create draft, update draft, document upload, and every workflow transition are written to the append-only `application_audit` chain.
@@ -149,4 +173,4 @@ Coverage is gated at 90% line and branch on the repo, with 95% line on the high-
 
 ## Health and observability
 
-`GET /healthz` returns liveness and database readiness. Prometheus-compatible metrics are exposed at `/metrics`.
+`GET /api/v1/healthz` returns liveness and database readiness. Prometheus-compatible metrics are exposed at `/api/v1/metrics` and require the configured bearer token in production.

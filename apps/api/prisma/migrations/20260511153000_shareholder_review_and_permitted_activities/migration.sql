@@ -37,3 +37,5 @@ $$;
 
 CREATE INDEX IF NOT EXISTS significant_shareholders_application_id_fit_and_proper_status_idx
 ON significant_shareholders(application_id, fit_and_proper_status);
+
+GRANT USAGE ON TYPE "FitAndProperStatus" TO licensing_app, licensing_migrate;

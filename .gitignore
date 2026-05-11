@@ -23,6 +23,7 @@ release/
 .env
 .env.*
 !.env.example
+deployment/production.env
 
 # Test artefacts
 test-results/
@@ -48,6 +49,7 @@ snapshots/
 # Logs
 logs/
 *.log
+deployment/backups/
 
 # Prisma local env
 **/prisma/.env
