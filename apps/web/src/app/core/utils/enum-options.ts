@@ -7,7 +7,7 @@ export const applicationStateOptions: SelectOption[] = [
   { label: 'Draft', value: ApplicationState.Draft },
   { label: 'Submitted', value: ApplicationState.Submitted },
   { label: 'Under review', value: ApplicationState.UnderReview },
-  { label: 'Changes requested', value: ApplicationState.ChangesRequested },
+  { label: 'Awaiting applicant response', value: ApplicationState.AwaitingApplicantResponse },
   { label: 'Recommended for approval', value: ApplicationState.RecommendedForApproval },
   { label: 'Recommended for rejection', value: ApplicationState.RecommendedForRejection },
   { label: 'Approved', value: ApplicationState.Approved },

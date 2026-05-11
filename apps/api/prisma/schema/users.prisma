@@ -1,25 +1,31 @@
 model User {
-  id                String                @id @default(uuid()) @db.Uuid
-  email             String                @unique @db.Citext
-  passwordHash      String                @map("password_hash")
-  fullName          String                @map("full_name")
-  role              UserRole
-  institutionName   String?               @map("institution_name")
-  isActive          Boolean               @default(true) @map("is_active")
-  failedLoginCount  Int                   @default(0) @map("failed_login_count")
-  lockedUntil       DateTime?             @map("locked_until") @db.Timestamptz(3)
-  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
-  applications      Application[]         @relation("ApplicantApplications")
-  reviewedItems     Application[]         @relation("ReviewerApplications")
-  approvedItems     Application[]         @relation("ApproverApplications")
-  uploadedDocuments ApplicationDocument[] @relation("UploadedDocuments")
-  auditEntries      ApplicationAudit[]    @relation("AuditActor")
-  systemLogs        SystemLog[]           @relation("SystemLogUser")
-  mfaSecret         UserMfaSecret?
-  mfaRecoveryCodes  UserMfaRecoveryCode[]
-  refreshTokens     RefreshToken[]
-  notifications     Notification[]
+  id                             String                      @id @default(uuid()) @db.Uuid
+  email                          String                      @unique @db.Citext
+  passwordHash                   String                      @map("password_hash")
+  fullName                       String                      @map("full_name")
+  role                           UserRole
+  institutionName                String?                     @map("institution_name")
+  isActive                       Boolean                     @default(true) @map("is_active")
+  failedLoginCount               Int                         @default(0) @map("failed_login_count")
+  lockedUntil                    DateTime?                   @map("locked_until") @db.Timestamptz(3)
+  createdAt                      DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                      DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  applications                   Application[]               @relation("ApplicantApplications")
+  reviewedItems                  Application[]               @relation("ReviewerApplications")
+  approvedItems                  Application[]               @relation("ApproverApplications")
+  uploadedDocuments              ApplicationDocument[]       @relation("UploadedDocuments")
+  capitalAttestations            CapitalDeclaration[]        @relation("CapitalDeclarationAttestations")
+  shareholderAttestations        SignificantShareholder[]    @relation("ShareholderAttestations")
+  shareholderFitAndProperReviews SignificantShareholder[]    @relation("ShareholderFitAndProperReviews")
+  managerAttestations            SeniorManager[]             @relation("SeniorManagerAttestations")
+  decisionRecords                ApplicationDecisionRecord[] @relation("DecisionActors")
+  informationLetters             InformationLetter[]         @relation("InformationLetterIssuers")
+  auditEntries                   ApplicationAudit[]          @relation("AuditActor")
+  systemLogs                     SystemLog[]                 @relation("SystemLogUser")
+  mfaSecret                      UserMfaSecret?
+  mfaRecoveryCodes               UserMfaRecoveryCode[]
+  refreshTokens                  RefreshToken[]
+  notifications                  Notification[]
 
   @@map("users")
 }

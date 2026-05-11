@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BankCategory } from '@prisma/client';
-import { IsEmail, IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
+import { ApplicationKind, BankCategory } from '@prisma/client';
+import { IsEmail, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateApplicationDto {
   @ApiProperty({
@@ -8,6 +8,15 @@ export class CreateApplicationDto {
   })
   @IsString()
   institutionName!: string;
+
+  @ApiProperty({
+    enum: ApplicationKind,
+    example: ApplicationKind.NEW_BANK,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ApplicationKind)
+  applicationKind?: ApplicationKind;
 
   @ApiProperty({
     enum: BankCategory,

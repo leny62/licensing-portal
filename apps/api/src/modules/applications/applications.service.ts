@@ -1,10 +1,17 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import {
   Application,
+  ApplicationDecisionOutcome,
   ApplicationState,
   BankCategory,
+  ComplianceFindingStatus,
+  ComplianceFindingSeverity,
+  DecisionType,
+  FeeStatus,
+  FitAndProperStatus,
   NotificationType,
   Prisma,
+  SeniorManagerRole,
   UserRole,
 } from '@prisma/client';
 
@@ -18,6 +25,7 @@ import { AuditService } from '../../infra/audit/audit.service';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { canEditDraft, canViewApplication } from './access-policy';
+import { applicationFeeRwf } from './application-fees';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ListApplicationsQueryDto } from './dto/transition.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
@@ -26,7 +34,7 @@ import { ApplicationDecision } from './enums/application-decision.enum';
 import { ComplianceCheckStatus } from './enums/compliance-check-status.enum';
 import { ApplicationResponse } from './interfaces/application-response.interface';
 import { ComplianceChecklistResponse } from './interfaces/compliance-checklist.interface';
-import { meetsMinimumPaidUpCapital, requiredPaidUpCapitalRwf } from './capital-requirements';
+import { requiredPaidUpCapitalRwf } from './capital-requirements';
 import { buildComplianceChecklist } from './regulatory-compliance';
 import { transitionApplication } from './state-machine';
 
@@ -45,13 +53,14 @@ export class ApplicationsService {
       throw new ForbiddenException('Only applicants can create applications.');
     }
 
-    this.assertPaidUpCapitalMeetsMinimum(dto.bankCategory, dto.paidUpCapitalRwf);
+    await this.assertPaidUpCapitalMeetsMinimum(dto.bankCategory, dto.paidUpCapitalRwf);
 
     return this.prisma.transactional(async (tx) => {
       const application = await tx.application.create({
         data: {
           applicantId: actor.id,
           institutionName: dto.institutionName,
+          ...(dto.applicationKind !== undefined ? { applicationKind: dto.applicationKind } : {}),
           bankCategory: dto.bankCategory,
           paidUpCapitalRwf: dto.paidUpCapitalRwf,
           legalForm: dto.legalForm,
@@ -60,6 +69,13 @@ export class ApplicationsService {
           contactEmail: dto.contactEmail,
           contactPhone: dto.contactPhone,
           summary: dto.summary,
+        },
+      });
+      await tx.applicationFee.create({
+        data: {
+          applicationId: application.id,
+          amountRwf: BigInt(applicationFeeRwf(application.applicationKind)),
+          status: FeeStatus.PENDING,
         },
       });
 
@@ -71,6 +87,7 @@ export class ApplicationsService {
         payload: {
           referenceNumber: application.referenceNumber,
           institutionName: application.institutionName,
+          applicationKind: application.applicationKind,
           bankCategory: application.bankCategory,
           paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
         },
@@ -144,19 +161,19 @@ export class ApplicationsService {
       throw new ForbiddenException('Only the applicant can edit their draft.');
     }
 
-    this.assertPaidUpCapitalMeetsMinimum(
+    await this.assertPaidUpCapitalMeetsMinimum(
       dto.bankCategory ?? application.bankCategory,
       dto.paidUpCapitalRwf ?? Number(application.paidUpCapitalRwf),
     );
 
     return this.prisma.transactional(async (tx) => {
       const updated = await tx.application.update({
-        where: { id },
+        where: { id: application.id },
         data: dto,
       });
 
       await this.auditService.write(tx, {
-        applicationId: id,
+        applicationId: application.id,
         actorId: actor.id,
         action: ApplicationAction.UpdateDraft,
         fromState: application.state,
@@ -226,6 +243,12 @@ export class ApplicationsService {
     id: string,
     decision: ApplicationDecision,
     justification: string,
+    structured?: {
+      decisionType?: DecisionType;
+      conditions?: Array<{ text: string; satisfactionDate: string }>;
+      allowedActivities?: string;
+      refusalReasons?: Array<{ reason: string; articleCitation: string }>;
+    },
   ): Promise<ApplicationResponse> {
     return this.transition(
       actor,
@@ -237,8 +260,20 @@ export class ApplicationsService {
         approverId: actor.id,
         decidedAt: new Date(),
         justification,
+        ...structured,
       },
     );
+  }
+
+  async defer(
+    actor: AuthenticatedUser,
+    id: string,
+    justification: string,
+  ): Promise<ApplicationResponse> {
+    return this.transition(actor, id, ApplicationAction.Defer, {
+      approverId: actor.id,
+      justification,
+    });
   }
 
   private async transition(
@@ -251,11 +286,16 @@ export class ApplicationsService {
       justification?: string;
       decidedAt?: Date;
       lastResubmitAt?: Date;
+      decisionType?: DecisionType;
+      conditions?: Array<{ text: string; satisfactionDate: string }>;
+      allowedActivities?: string;
+      refusalReasons?: Array<{ reason: string; articleCitation: string }>;
     },
   ): Promise<ApplicationResponse> {
     return this.prisma.transactional(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM applications WHERE id = ${id}::uuid FOR UPDATE`;
-      const application = await tx.application.findUnique({ where: { id } });
+      const target = await this.findApplicationOrThrow(id);
+      await tx.$queryRaw`SELECT id FROM applications WHERE id = ${target.id}::uuid FOR UPDATE`;
+      const application = await tx.application.findUnique({ where: { id: target.id } });
 
       if (application === null) {
         throw new ResourceNotFoundError('Application not found.');
@@ -264,15 +304,15 @@ export class ApplicationsService {
       this.assertCanView(actor, application);
 
       const context = {
-        applicationId: application.id,
+        applicationId: target.id,
         applicantId: application.applicantId,
         reviewerId: application.reviewerId,
         reviewerHistoryIds: await this.reviewerHistoryIds(tx, application),
         hasRequiredDocuments:
-          (await tx.applicationDocument.count({ where: { applicationId: id } })) > 0,
+          (await tx.applicationDocument.count({ where: { applicationId: target.id } })) > 0,
         hasDocumentAfterLastRequest:
           (await tx.applicationDocument.count({
-            where: { applicationId: id, createdAt: { gt: application.updatedAt } },
+            where: { applicationId: target.id, createdAt: { gt: application.updatedAt } },
           })) > 0,
       };
 
@@ -285,7 +325,7 @@ export class ApplicationsService {
       });
 
       const updated = await tx.application.updateMany({
-        where: { id, rowVersion: application.rowVersion },
+        where: { id: target.id, rowVersion: application.rowVersion },
         data: {
           state: result.nextState,
           rowVersion: { increment: 1 },
@@ -303,7 +343,7 @@ export class ApplicationsService {
       }
 
       await this.auditService.write(tx, {
-        applicationId: id,
+        applicationId: target.id,
         actorId: actor.id,
         action,
         fromState: application.state,
@@ -312,7 +352,9 @@ export class ApplicationsService {
         ...(data.justification !== undefined ? { justification: data.justification } : {}),
       });
 
-      const refreshed = await tx.application.findUniqueOrThrow({ where: { id } });
+      await this.createDecisionRecord(tx, application, result.nextState, action, actor.id, data);
+      await this.advanceSlaClock(tx, application, result.nextState);
+      const refreshed = await tx.application.findUniqueOrThrow({ where: { id: target.id } });
       await this.createTransitionNotifications(tx, application, refreshed, action, actor.id);
 
       return this.mapApplication(refreshed);
@@ -432,8 +474,108 @@ export class ApplicationsService {
     };
   }
 
-  private async findApplicationOrThrow(id: string): Promise<Application> {
-    const application = await this.prisma.application.findUnique({ where: { id } });
+  private async createDecisionRecord(
+    tx: Prisma.TransactionClient,
+    application: Application,
+    nextState: ApplicationState,
+    action: ApplicationAction,
+    actorId: string,
+    data: {
+      justification?: string;
+      decisionType?: DecisionType;
+      conditions?: Array<{ text: string; satisfactionDate: string }>;
+      allowedActivities?: string;
+      refusalReasons?: Array<{ reason: string; articleCitation: string }>;
+    },
+  ): Promise<void> {
+    const outcome = this.decisionOutcome(action);
+
+    if (outcome === null || data.justification === undefined) {
+      return;
+    }
+
+    await tx.applicationDecisionRecord.create({
+      data: {
+        applicationId: application.id,
+        actorId,
+        outcome,
+        decisionType: data.decisionType ?? null,
+        fromState: application.state,
+        toState: nextState,
+        justification: data.justification,
+        conditions: data.conditions ? JSON.parse(JSON.stringify(data.conditions)) : undefined,
+        allowedActivities: data.allowedActivities ?? null,
+        refusalReasons: data.refusalReasons
+          ? JSON.parse(JSON.stringify(data.refusalReasons))
+          : undefined,
+      },
+    });
+  }
+
+  private decisionOutcome(action: ApplicationAction): ApplicationDecisionOutcome | null {
+    if (action === ApplicationAction.Approve || action === ApplicationAction.RecommendApproval) {
+      return ApplicationDecisionOutcome.APPROVE;
+    }
+
+    if (action === ApplicationAction.Reject || action === ApplicationAction.RecommendRejection) {
+      return ApplicationDecisionOutcome.REJECT;
+    }
+
+    if (action === ApplicationAction.RequestInfo) {
+      return ApplicationDecisionOutcome.REQUEST_INFORMATION;
+    }
+
+    if (action === ApplicationAction.Defer) {
+      return ApplicationDecisionOutcome.DEFER;
+    }
+
+    return null;
+  }
+
+  private async advanceSlaClock(
+    tx: Prisma.TransactionClient,
+    application: Application,
+    nextState: ApplicationState,
+  ): Promise<void> {
+    await tx.applicationSlaClock.updateMany({
+      where: { applicationId: application.id, stoppedAt: null },
+      data: { stoppedAt: new Date() },
+    });
+
+    if (
+      nextState === ApplicationState.APPROVED ||
+      nextState === ApplicationState.REJECTED ||
+      nextState === ApplicationState.WITHDRAWN
+    ) {
+      return;
+    }
+
+    await tx.applicationSlaClock.create({
+      data: {
+        applicationId: application.id,
+        state: nextState,
+        dueAt: this.slaDueAt(nextState),
+      },
+    });
+  }
+
+  private slaDueAt(state: ApplicationState): Date {
+    const daysByState: Partial<Record<ApplicationState, number>> = {
+      [ApplicationState.SUBMITTED]: 7,
+      [ApplicationState.UNDER_REVIEW]: 14,
+      [ApplicationState.AWAITING_APPLICANT_RESPONSE]: 10,
+      [ApplicationState.RECOMMENDED_FOR_APPROVAL]: 5,
+      [ApplicationState.RECOMMENDED_FOR_REJECTION]: 5,
+    };
+    const days = daysByState[state] ?? 7;
+
+    return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  }
+
+  private async findApplicationOrThrow(identifier: string): Promise<Application> {
+    const application = this.isUuid(identifier)
+      ? await this.prisma.application.findUnique({ where: { id: identifier } })
+      : await this.prisma.application.findUnique({ where: { referenceNumber: identifier } });
 
     if (application === null) {
       throw new ResourceNotFoundError('Application not found.');
@@ -448,8 +590,53 @@ export class ApplicationsService {
       select: { id: true, slot: true, version: true },
       orderBy: [{ slot: 'asc' }, { version: 'desc' }],
     });
+    const [threshold, capitalDeclaration, shareholders, seniorManagers, fee] = await Promise.all([
+      this.requiredCapitalFor(application.bankCategory),
+      this.prisma.capitalDeclaration.findUnique({ where: { applicationId: application.id } }),
+      this.prisma.significantShareholder.findMany({
+        where: { applicationId: application.id },
+        select: { ownershipPercent: true, fitAndProperStatus: true },
+      }),
+      this.prisma.seniorManager.findMany({
+        where: { applicationId: application.id, fitAndProperAttested: true },
+        select: { role: true },
+      }),
+      this.prisma.applicationFee.findUnique({ where: { applicationId: application.id } }),
+    ]);
+    const seniorManagerRoles = new Set(seniorManagers.map((manager) => manager.role));
 
-    return buildComplianceChecklist(application, documents);
+    const checklist = buildComplianceChecklist(
+      {
+        id: application.id,
+        referenceNumber: application.referenceNumber,
+        applicationKind: application.applicationKind,
+        bankCategory: application.bankCategory,
+        paidUpCapitalRwf: application.paidUpCapitalRwf,
+        requiredPaidUpCapitalRwf: threshold,
+        capitalDeclarationAmountRwf: capitalDeclaration?.amountRwf.toString() ?? null,
+        shareholderCount: shareholders.length,
+        shareholderOwnershipTotal: shareholders.reduce(
+          (sum, shareholder) => sum + Number(shareholder.ownershipPercent.toString()),
+          0,
+        ),
+        shareholderFitAndProperFailed: shareholders.some(
+          (shareholder) => shareholder.fitAndProperStatus === FitAndProperStatus.FAILED,
+        ),
+        hasRequiredSeniorManagers:
+          seniorManagerRoles.has(SeniorManagerRole.CHIEF_EXECUTIVE) &&
+          seniorManagerRoles.has(SeniorManagerRole.CHIEF_FINANCE) &&
+          seniorManagerRoles.has(SeniorManagerRole.CHIEF_RISK) &&
+          seniorManagerRoles.has(SeniorManagerRole.CHIEF_COMPLIANCE),
+        feeProofSubmitted:
+          fee?.status === FeeStatus.PROOF_SUBMITTED || fee?.status === FeeStatus.VERIFIED,
+        country: application.country,
+      },
+      documents,
+    );
+
+    await this.syncComplianceFindings(application.id, checklist);
+
+    return checklist;
   }
 
   private async assertComplianceReady(actor: AuthenticatedUser, id: string): Promise<void> {
@@ -487,6 +674,7 @@ export class ApplicationsService {
       referenceNumber: application.referenceNumber,
       applicantId: application.applicantId,
       institutionName: application.institutionName,
+      applicationKind: application.applicationKind,
       bankCategory: application.bankCategory,
       paidUpCapitalRwf: application.paidUpCapitalRwf.toString(),
       legalForm: application.legalForm,
@@ -508,13 +696,76 @@ export class ApplicationsService {
     };
   }
 
-  private assertPaidUpCapitalMeetsMinimum(category: BankCategory, paidUpCapitalRwf: number): void {
-    const requiredCapital = requiredPaidUpCapitalRwf(category);
+  private async syncComplianceFindings(
+    applicationId: string,
+    checklist: ComplianceChecklistResponse,
+  ): Promise<void> {
+    const openCodes = new Set(checklist.findings.map((finding) => finding.code));
 
-    if (!meetsMinimumPaidUpCapital(category, paidUpCapitalRwf)) {
+    await this.prisma.transactional(async (tx) => {
+      for (const finding of checklist.findings) {
+        await tx.complianceFinding.upsert({
+          where: { applicationId_code: { applicationId, code: finding.code } },
+          create: {
+            applicationId,
+            code: finding.code,
+            section: finding.section,
+            title: finding.title,
+            detail: finding.detail,
+            severity: finding.severity as ComplianceFindingSeverity,
+            status: ComplianceFindingStatus.OPEN,
+            regulatoryBasis: finding.regulatoryBasis,
+            evidence: finding.evidence as unknown as Prisma.JsonArray,
+          },
+          update: {
+            section: finding.section,
+            title: finding.title,
+            detail: finding.detail,
+            severity: finding.severity as ComplianceFindingSeverity,
+            status: ComplianceFindingStatus.OPEN,
+            regulatoryBasis: finding.regulatoryBasis,
+            evidence: finding.evidence as unknown as Prisma.JsonArray,
+            resolvedAt: null,
+          },
+        });
+      }
+
+      await tx.complianceFinding.updateMany({
+        where: {
+          applicationId,
+          code: { notIn: [...openCodes] },
+          status: ComplianceFindingStatus.OPEN,
+        },
+        data: { status: ComplianceFindingStatus.RESOLVED, resolvedAt: new Date() },
+      });
+    });
+  }
+
+  private async assertPaidUpCapitalMeetsMinimum(
+    category: BankCategory,
+    paidUpCapitalRwf: number,
+  ): Promise<void> {
+    const requiredCapital = await this.requiredCapitalFor(category);
+
+    if (paidUpCapitalRwf < requiredCapital) {
       throw new BadRequestException(
         `${category} applications require minimum paid-up capital of RWF ${requiredCapital}.`,
       );
     }
+  }
+
+  private async requiredCapitalFor(category: BankCategory): Promise<number> {
+    const threshold = await this.prisma.bankCategoryThreshold.findUnique({
+      where: { category },
+      select: { minimumRwf: true },
+    });
+
+    return threshold === null
+      ? requiredPaidUpCapitalRwf(category)
+      : Number(threshold.minimumRwf.toString());
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
   }
 }

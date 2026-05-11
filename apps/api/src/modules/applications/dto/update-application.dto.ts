@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { BankCategory } from '@prisma/client';
+import { ApplicationKind, BankCategory } from '@prisma/client';
 import { IsEmail, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateApplicationDto {
@@ -9,6 +9,14 @@ export class UpdateApplicationDto {
   @IsOptional()
   @IsString()
   institutionName?: string;
+
+  @ApiPropertyOptional({
+    enum: ApplicationKind,
+    example: ApplicationKind.NEW_BANK,
+  })
+  @IsOptional()
+  @IsEnum(ApplicationKind)
+  applicationKind?: ApplicationKind;
 
   @ApiPropertyOptional({
     enum: BankCategory,

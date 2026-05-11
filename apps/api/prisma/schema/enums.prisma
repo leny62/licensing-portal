@@ -1,3 +1,9 @@
+enum ApplicationKind {
+  NEW_BANK
+  FOREIGN_SUBSIDIARY
+  REPRESENTATIVE_OFFICE
+}
+
 enum UserRole {
   APPLICANT
   REVIEWER
@@ -9,7 +15,7 @@ enum ApplicationState {
   DRAFT
   SUBMITTED
   UNDER_REVIEW
-  CHANGES_REQUESTED
+  AWAITING_APPLICANT_RESPONSE
   RECOMMENDED_FOR_APPROVAL
   RECOMMENDED_FOR_REJECTION
   APPROVED
@@ -53,4 +59,64 @@ enum SystemLogLevel {
   INFO
   WARN
   ERROR
+}
+
+enum ShareholderType {
+  NATURAL_PERSON
+  LEGAL_ENTITY
+}
+
+enum FitAndProperStatus {
+  PENDING
+  CLEARED
+  FAILED
+}
+
+enum SeniorManagerRole {
+  CHIEF_EXECUTIVE
+  CHIEF_FINANCE
+  CHIEF_RISK
+  CHIEF_COMPLIANCE
+  INTERNAL_AUDIT
+  OPERATIONS
+  OTHER
+}
+
+enum ComplianceFindingSeverity {
+  INFO
+  WARNING
+  BLOCKING
+}
+
+enum ComplianceFindingStatus {
+  OPEN
+  RESOLVED
+  WAIVED
+}
+
+enum ApplicationDecisionOutcome {
+  APPROVE
+  REJECT
+  REQUEST_INFORMATION
+  DEFER
+}
+
+enum DecisionType {
+  GRANT
+  GRANT_WITH_CONDITIONS
+  GRANT_LIMITED
+  REFUSE
+}
+
+enum InformationLetterStatus {
+  ISSUED
+  RESPONDED
+  OVERDUE
+}
+
+enum FeeStatus {
+  PENDING
+  PROOF_SUBMITTED
+  VERIFIED
+  REJECTED
 }

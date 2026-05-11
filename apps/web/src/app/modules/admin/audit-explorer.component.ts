@@ -43,8 +43,8 @@ export class AuditExplorerComponent {
   readonly appIdField: FieldConfig = {
     name: 'applicationId',
     type: 'text',
-    label: 'Application ID',
-    placeholder: 'e.g. 694e9dc6-f04a-4e1b-a355-f7397310d1b9',
+    label: 'Application reference',
+    placeholder: 'e.g. APP-SEED-DRAFT',
   };
 
   entries: ApplicationAuditResponse[] = [];
@@ -84,7 +84,7 @@ export class AuditExplorerComponent {
         error: () => {
           this.hasError = true;
           this.errorMessage =
-            'No audit entries were loaded. Check the application ID and try again.';
+            'No audit entries were loaded. Check the application reference and try again.';
         },
       });
   }
@@ -105,7 +105,8 @@ export class AuditExplorerComponent {
           (this.verification = {
             valid: false,
             checkedEntries: 0,
-            reason: 'Unable to verify this chain. Check the application ID and access rights.',
+            reason:
+              'Unable to verify this chain. Check the application reference and access rights.',
           }),
       });
   }

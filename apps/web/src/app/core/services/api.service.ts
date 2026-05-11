@@ -37,6 +37,13 @@ export class ApiService {
     });
   }
 
+  delete<T>(path: string, options: RequestOptions = {}): Observable<T> {
+    return this.http.delete<T>(this.url(path), {
+      params: buildHttpQueryParams(options.params),
+      context: options.context,
+    });
+  }
+
   download(path: string, options: RequestOptions = {}): Observable<Blob> {
     return this.http.get(this.url(path), {
       params: buildHttpQueryParams(options.params),

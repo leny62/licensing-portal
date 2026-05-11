@@ -70,6 +70,29 @@ describe('configuration', () => {
     expect(() => configuration()).toThrow(/Invalid environment configuration/);
   });
 
+  it('fails fast when the document key encryption key is not 32 bytes', () => {
+    process.env = { ...validEnv, DOCUMENT_KEK_BASE64: Buffer.alloc(16, 1).toString('base64') };
+
+    expect(() => configuration()).toThrow(/DOCUMENT_KEK_BASE64/);
+  });
+
+  it('rejects wildcard CORS in production', () => {
+    process.env = {
+      ...validEnv,
+      NODE_ENV: 'production',
+      CORS_ORIGINS: '*',
+      METRICS_BEARER_TOKEN: 'm'.repeat(32),
+    };
+
+    expect(() => configuration()).toThrow(/CORS_ORIGINS/);
+  });
+
+  it('requires a metrics bearer token in production', () => {
+    process.env = { ...validEnv, NODE_ENV: 'production' };
+
+    expect(() => configuration()).toThrow(/METRICS_BEARER_TOKEN/);
+  });
+
   it('applies custom argon2 tuning from environment', () => {
     process.env = {
       ...validEnv,

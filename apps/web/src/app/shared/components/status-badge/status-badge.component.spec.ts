@@ -15,10 +15,10 @@ describe(StatusBadgeComponent.name, () => {
   });
 
   it('renders a readable state label', () => {
-    fixture.componentInstance.state = ApplicationState.ChangesRequested;
+    fixture.componentInstance.state = ApplicationState.AwaitingApplicantResponse;
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Changes requested');
+    expect(fixture.nativeElement.textContent).toContain('Awaiting applicant response');
   });
 
   it('falls back cleanly for unknown states', () => {

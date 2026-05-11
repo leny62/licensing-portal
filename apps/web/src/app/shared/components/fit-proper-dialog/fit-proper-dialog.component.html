@@ -1,0 +1,16 @@
+<div class="w-full max-w-[560px] p-1">
+  <div class="border-b border-slate-100 px-5 py-4">
+    <h2 class="m-0 text-lg font-semibold text-slate-950">Fit-and-proper review</h2>
+    <p class="m-0 mt-1 text-sm text-slate-500">{{ data.shareholderName }}</p>
+  </div>
+
+  <form [formGroup]="form" class="grid gap-4 px-5 py-5" (ngSubmit)="submit()">
+    <app-inputs [field]="statusField" [group]="form" [formSelectData]="selectData"></app-inputs>
+    <app-inputs [field]="justificationField" [group]="form"></app-inputs>
+
+    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+      <app-button type="submit" icon="fact_check">Save review</app-button>
+    </div>
+  </form>
+</div>

@@ -34,55 +34,92 @@ const base64Secret = z
     }
   }, 'must be valid base64');
 
-export const environmentSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  HOST: z.string().min(1).default('0.0.0.0'),
-  PORT: z.coerce.number().int().positive().default(3000),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+export const environmentSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    HOST: z.string().min(1).default('0.0.0.0'),
+    PORT: z.coerce.number().int().positive().default(3000),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+      .default('info'),
 
-  DATABASE_URL: z.string().min(1),
-  DATABASE_URL_MIGRATION: z.string().min(1).optional(),
+    DATABASE_URL: z.string().min(1),
+    DATABASE_URL_MIGRATION: z.string().min(1).optional(),
 
-  CORS_ORIGINS: z.string().min(1).default('http://localhost:4200'),
-  SWAGGER_ENABLED: booleanFromEnv.default(true),
-  RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
-  RATE_LIMIT_LIMIT: z.coerce.number().int().positive().default(100),
-  RATE_LIMIT_LOGIN_PER_MIN: z.coerce.number().int().positive().default(5),
-  RATE_LIMIT_UPLOAD_PER_MIN: z.coerce.number().int().positive().default(20),
+    CORS_ORIGINS: z.string().min(1).default('http://localhost:4200'),
+    SWAGGER_ENABLED: booleanFromEnv.default(true),
+    METRICS_BEARER_TOKEN: z.string().min(32).optional(),
+    RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
+    RATE_LIMIT_LIMIT: z.coerce.number().int().positive().default(100),
+    RATE_LIMIT_LOGIN_PER_MIN: z.coerce.number().int().positive().default(5),
+    RATE_LIMIT_UPLOAD_PER_MIN: z.coerce.number().int().positive().default(20),
 
-  JWT_ISSUER: z.string().min(1).default('licensing-portal'),
-  JWT_AUDIENCE: z.string().min(1).default('licensing-portal-api'),
-  JWT_KID: z.string().min(1).default('key-1'),
-  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
-  JWT_REFRESH_TTL_SECONDS: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(60 * 60 * 24 * 30),
-  JWT_PRIVATE_KEY_BASE64: base64Secret,
-  JWT_PUBLIC_KEY_BASE64: base64Secret,
+    JWT_ISSUER: z.string().min(1).default('licensing-portal'),
+    JWT_AUDIENCE: z.string().min(1).default('licensing-portal-api'),
+    JWT_KID: z.string().min(1).default('key-1'),
+    JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+    JWT_REFRESH_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(60 * 60 * 24 * 30),
+    JWT_PRIVATE_KEY_BASE64: base64Secret,
+    JWT_PUBLIC_KEY_BASE64: base64Secret,
 
-  ARGON2_MEMORY_KIB: z.coerce.number().int().positive().default(65536),
-  ARGON2_TIME_COST: z.coerce.number().int().positive().default(3),
-  ARGON2_PARALLELISM: z.coerce.number().int().positive().default(4),
+    ARGON2_MEMORY_KIB: z.coerce.number().int().positive().default(65536),
+    ARGON2_TIME_COST: z.coerce.number().int().positive().default(3),
+    ARGON2_PARALLELISM: z.coerce.number().int().positive().default(4),
 
-  MFA_ISSUER: z.string().min(1).default('National Bank of Rwanda Licensing Portal'),
-  DOCUMENT_STORAGE_ROOT: z.string().min(1).default('./var/documents'),
-  DOCUMENT_MAX_BYTES: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(5 * 1024 * 1024),
-  DOCUMENT_KEK_BASE64: base64Secret,
+    MFA_ISSUER: z.string().min(1).default('National Bank of Rwanda Licensing Portal'),
+    DOCUMENT_STORAGE_ROOT: z.string().min(1).default('./var/documents'),
+    DOCUMENT_MAX_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(5 * 1024 * 1024),
+    DOCUMENT_KEK_BASE64: base64Secret,
 
-  SNAPSHOT_DESTINATION: z.string().min(1).default('./var/snapshots'),
+    SNAPSHOT_DESTINATION: z.string().min(1).default('./var/snapshots'),
 
-  SMTP_HOST: z.string().min(1).default('localhost'),
-  SMTP_PORT: z.coerce.number().int().positive().default(1025),
-  SMTP_USER: z.string().optional().default(''),
-  SMTP_PASSWORD: z.string().optional().default(''),
-  MAIL_FROM: z.string().email().default('no-reply@licensing.local'),
-});
+    SMTP_HOST: z.string().min(1).default('localhost'),
+    SMTP_PORT: z.coerce.number().int().positive().default(1025),
+    SMTP_USER: z.string().optional().default(''),
+    SMTP_PASSWORD: z.string().optional().default(''),
+    MAIL_FROM: z.string().email().default('no-reply@licensing.local'),
+  })
+  .superRefine((env, ctx) => {
+    if (Buffer.from(env.DOCUMENT_KEK_BASE64, 'base64').byteLength !== 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['DOCUMENT_KEK_BASE64'],
+        message: 'must decode to exactly 32 bytes',
+      });
+    }
+
+    if (env.NODE_ENV === 'production' && env.CORS_ORIGINS.trim() === '*') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['CORS_ORIGINS'],
+        message: 'cannot be wildcard in production',
+      });
+    }
+
+    if (env.NODE_ENV === 'production' && env.JWT_ACCESS_TTL_SECONDS > 3600) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['JWT_ACCESS_TTL_SECONDS'],
+        message: 'must be 3600 seconds or less in production',
+      });
+    }
+
+    if (env.NODE_ENV === 'production' && env.METRICS_BEARER_TOKEN === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['METRICS_BEARER_TOKEN'],
+        message: 'is required in production',
+      });
+    }
+  });
 
 export type Environment = z.infer<typeof environmentSchema>;
 
@@ -113,6 +150,7 @@ export const configuration = () => {
     security: {
       corsOrigins: env.CORS_ORIGINS,
       swaggerEnabled: env.SWAGGER_ENABLED,
+      metricsBearerToken: env.METRICS_BEARER_TOKEN,
       rateLimitTtlSeconds: env.RATE_LIMIT_TTL_SECONDS,
       rateLimitLimit: env.RATE_LIMIT_LIMIT,
       loginRateLimitPerMin: env.RATE_LIMIT_LOGIN_PER_MIN,

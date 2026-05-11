@@ -1,4 +1,5 @@
 import { ApplicationDecision } from '../enums/application-decision.enum';
+import { DecisionType } from '../enums/decision-type.enum';
 import { ApplicationState } from '../enums/application-state.enum';
 import { BankCategory } from '../enums/bank-category.enum';
 
@@ -63,4 +64,8 @@ export interface RecommendationRequest extends JustificationRequest {
 
 export interface DecisionRequest extends JustificationRequest {
   decision: ApplicationDecision;
+  decisionType?: DecisionType;
+  conditions?: Array<{ text: string; satisfactionDate: string }>;
+  allowedActivities?: string;
+  refusalReasons?: Array<{ reason: string; articleCitation: string }>;
 }

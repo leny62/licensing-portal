@@ -20,6 +20,7 @@ const actionsRequiringJustification = new Set<ApplicationAction>([
   ApplicationAction.RecommendRejection,
   ApplicationAction.Approve,
   ApplicationAction.Reject,
+  ApplicationAction.Defer,
 ]);
 
 export const transitionApplication = (input: TransitionInput): TransitionResult => {
@@ -55,7 +56,7 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
         input.currentState !== ApplicationState.DRAFT &&
         input.currentState !== ApplicationState.SUBMITTED &&
         input.currentState !== ApplicationState.UNDER_REVIEW &&
-        input.currentState !== ApplicationState.CHANGES_REQUESTED
+        input.currentState !== ApplicationState.AWAITING_APPLICANT_RESPONSE
       ) {
         throw illegal(input);
       }
@@ -75,10 +76,10 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
     case ApplicationAction.RequestInfo:
       requireState(input, ApplicationState.UNDER_REVIEW);
       requireAssignedReviewer(input);
-      return { nextState: ApplicationState.CHANGES_REQUESTED };
+      return { nextState: ApplicationState.AWAITING_APPLICANT_RESPONSE };
 
     case ApplicationAction.Resubmit:
-      requireState(input, ApplicationState.CHANGES_REQUESTED);
+      requireState(input, ApplicationState.AWAITING_APPLICANT_RESPONSE);
       requireActor(input, UserRole.APPLICANT);
       requireApplicantOwns(input);
       if (!input.context.hasDocumentAfterLastRequest) {
@@ -108,9 +109,25 @@ export const transitionApplication = (input: TransitionInput): TransitionResult 
       requireSeparationOfDuties(input);
       return { nextState: ApplicationState.REJECTED };
 
+    case ApplicationAction.Defer:
+      requireApproverDecisionState(input);
+      requireActor(input, UserRole.APPROVER);
+      requireSeparationOfDuties(input);
+      return { nextState: input.currentState };
+
     case ApplicationAction.CreateDraft:
     case ApplicationAction.UpdateDraft:
     case ApplicationAction.UploadDocument:
+    case ApplicationAction.UpsertCapitalDeclaration:
+    case ApplicationAction.CreateShareholder:
+    case ApplicationAction.UpdateShareholder:
+    case ApplicationAction.DeleteShareholder:
+    case ApplicationAction.CreateSeniorManager:
+    case ApplicationAction.UpdateSeniorManager:
+    case ApplicationAction.DeleteSeniorManager:
+    case ApplicationAction.SubmitFeeProof:
+    case ApplicationAction.IssueInformationLetter:
+    case ApplicationAction.SlaBreached:
       throw illegal(input);
   }
 

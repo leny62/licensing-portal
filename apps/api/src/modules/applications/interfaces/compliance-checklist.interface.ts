@@ -34,6 +34,17 @@ export interface ComplianceChecklistSummary {
   blockingMissing: number;
 }
 
+export interface ComplianceFindingResponse {
+  code: string;
+  section: string;
+  title: string;
+  detail: string;
+  severity: 'INFO' | 'WARNING' | 'BLOCKING';
+  regulatoryBasis: string;
+  requiredSlots: DocumentSlot[];
+  evidence: ComplianceChecklistEvidence[];
+}
+
 export interface ComplianceChecklistResponse {
   applicationId: string;
   referenceNumber: string;
@@ -42,4 +53,5 @@ export interface ComplianceChecklistResponse {
   requiredPaidUpCapitalRwf: number;
   summary: ComplianceChecklistSummary;
   sections: ComplianceChecklistSection[];
+  findings: ComplianceFindingResponse[];
 }

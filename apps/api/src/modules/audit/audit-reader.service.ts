@@ -25,10 +25,10 @@ export class AuditReaderService {
 
   async list(
     actor: AuthenticatedUser,
-    applicationId: string,
+    applicationIdentifier: string,
     query: ListAuditQueryDto,
   ): Promise<PagedResponse<ApplicationAuditResponse>> {
-    await this.assertCanViewAudit(actor, applicationId);
+    const applicationId = await this.resolveViewableApplicationId(actor, applicationIdentifier);
     const page = query.page ?? 0;
     const size = query.size ?? 20;
     const where = { applicationId };
@@ -60,9 +60,9 @@ export class AuditReaderService {
 
   async verify(
     actor: AuthenticatedUser,
-    applicationId: string,
+    applicationIdentifier: string,
   ): Promise<AuditChainVerificationResult> {
-    await this.assertCanViewAudit(actor, applicationId);
+    const applicationId = await this.resolveViewableApplicationId(actor, applicationIdentifier);
     const rows = await this.prisma.applicationAudit.findMany({
       where: { applicationId },
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
@@ -71,12 +71,25 @@ export class AuditReaderService {
     return verifyAuditChainRows(rows);
   }
 
-  private async assertCanViewAudit(actor: AuthenticatedUser, applicationId: string): Promise<void> {
-    const application = await this.prisma.application.findUnique({ where: { id: applicationId } });
+  private async resolveViewableApplicationId(
+    actor: AuthenticatedUser,
+    applicationIdentifier: string,
+  ): Promise<string> {
+    const application = this.isUuid(applicationIdentifier)
+      ? await this.prisma.application.findUnique({ where: { id: applicationIdentifier } })
+      : await this.prisma.application.findUnique({
+          where: { referenceNumber: applicationIdentifier },
+        });
 
     if (application === null || !canViewApplication(actor, application)) {
       throw new ForbiddenException('Access denied.');
     }
+
+    return application.id;
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
   }
 
   private mapRow(row: AuditRowWithActor): ApplicationAuditResponse {

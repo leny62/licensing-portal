@@ -28,7 +28,7 @@ import { ApplicationDocumentResponse } from './interfaces/document-response.inte
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
-  @Roles(UserRole.APPLICANT)
+  @Roles(UserRole.APPLICANT, UserRole.REVIEWER, UserRole.APPROVER, UserRole.ADMIN)
   @Post('applications/:id/documents')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a document to an application slot' })

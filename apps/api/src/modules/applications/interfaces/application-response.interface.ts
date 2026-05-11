@@ -1,10 +1,11 @@
-import { ApplicationState, BankCategory } from '@prisma/client';
+import { ApplicationKind, ApplicationState, BankCategory } from '@prisma/client';
 
 export interface ApplicationResponse {
   id: string;
   referenceNumber: string;
   applicantId: string;
   institutionName: string;
+  applicationKind: ApplicationKind;
   bankCategory: BankCategory;
   paidUpCapitalRwf: string;
   legalForm: string;

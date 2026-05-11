@@ -66,11 +66,11 @@ describe('transitionApplication', () => {
       ApplicationAction.RequestInfo,
       ApplicationState.UNDER_REVIEW,
       UserRole.REVIEWER,
-      ApplicationState.CHANGES_REQUESTED,
+      ApplicationState.AWAITING_APPLICANT_RESPONSE,
     ],
     [
       ApplicationAction.Resubmit,
-      ApplicationState.CHANGES_REQUESTED,
+      ApplicationState.AWAITING_APPLICANT_RESPONSE,
       UserRole.APPLICANT,
       ApplicationState.UNDER_REVIEW,
     ],

@@ -1,0 +1,180 @@
+model BankCategoryThreshold {
+  id         String       @id @default(uuid()) @db.Uuid
+  category   BankCategory @unique
+  minimumRwf BigInt       @map("minimum_rwf")
+
+  @@map("bank_category_thresholds")
+}
+
+model CapitalDeclaration {
+  id               String      @id @default(uuid()) @db.Uuid
+  applicationId    String      @unique @map("application_id") @db.Uuid
+  amountRwf        BigInt      @map("amount_rwf")
+  sourceSummary    String      @map("source_summary")
+  attestedAt       DateTime    @map("attested_at") @db.Timestamptz(3)
+  attestedByUserId String      @map("attested_by_user_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  attestedBy       User        @relation("CapitalDeclarationAttestations", fields: [attestedByUserId], references: [id], onDelete: Restrict)
+
+  @@map("capital_declarations")
+}
+
+model SignificantShareholder {
+  id                        String             @id @default(uuid()) @db.Uuid
+  applicationId             String             @map("application_id") @db.Uuid
+  shareholderType           ShareholderType    @map("shareholder_type")
+  fullName                  String             @map("full_name")
+  registrationNumber        String?            @map("registration_number")
+  country                   String
+  ownershipPercent          Decimal            @map("ownership_percent") @db.Decimal(5, 2)
+  sourceOfFunds             String             @map("source_of_funds")
+  beneficialOwner           String?            @map("beneficial_owner")
+  fitAndProperStatus        FitAndProperStatus @default(PENDING) @map("fit_and_proper_status")
+  fitAndProperReviewedAt    DateTime?          @map("fit_and_proper_reviewed_at") @db.Timestamptz(3)
+  fitAndProperReviewedById  String?            @map("fit_and_proper_reviewed_by_id") @db.Uuid
+  fitAndProperJustification String?            @map("fit_and_proper_justification")
+  attestedAt                DateTime           @map("attested_at") @db.Timestamptz(3)
+  attestedByUserId          String             @map("attested_by_user_id") @db.Uuid
+  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  application               Application        @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  attestedBy                User               @relation("ShareholderAttestations", fields: [attestedByUserId], references: [id], onDelete: Restrict)
+  fitAndProperReviewedBy    User?              @relation("ShareholderFitAndProperReviews", fields: [fitAndProperReviewedById], references: [id], onDelete: Restrict)
+
+  @@index([applicationId])
+  @@index([applicationId, ownershipPercent])
+  @@index([applicationId, fitAndProperStatus])
+  @@map("significant_shareholders")
+}
+
+model SeniorManager {
+  id                   String            @id @default(uuid()) @db.Uuid
+  applicationId        String            @map("application_id") @db.Uuid
+  role                 SeniorManagerRole
+  fullName             String            @map("full_name")
+  email                String
+  nationality          String
+  yearsExperience      Int               @map("years_experience")
+  fitAndProperAttested Boolean           @default(false) @map("fit_and_proper_attested")
+  attestedAt           DateTime          @map("attested_at") @db.Timestamptz(3)
+  attestedByUserId     String            @map("attested_by_user_id") @db.Uuid
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  application          Application       @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  attestedBy           User              @relation("SeniorManagerAttestations", fields: [attestedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId])
+  @@index([applicationId, role])
+  @@map("senior_managers")
+}
+
+model DocumentSlotSpec {
+  id               String       @id @default(uuid()) @db.Uuid
+  slot             DocumentSlot @unique
+  title            String
+  description      String
+  ownerRole        UserRole     @map("owner_role")
+  required         Boolean      @default(true)
+  allowedMimeTypes String[]     @map("allowed_mime_types")
+  maxBytes         Int          @map("max_bytes")
+  regulatoryBasis  String       @map("regulatory_basis")
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("document_slot_specs")
+}
+
+model ComplianceFinding {
+  id              String                    @id @default(uuid()) @db.Uuid
+  applicationId   String                    @map("application_id") @db.Uuid
+  code            String
+  section         String
+  title           String
+  detail          String
+  severity        ComplianceFindingSeverity
+  status          ComplianceFindingStatus   @default(OPEN)
+  regulatoryBasis String?                   @map("regulatory_basis")
+  evidence        Json                      @default("{}")
+  resolvedAt      DateTime?                 @map("resolved_at") @db.Timestamptz(3)
+  createdAt       DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  application     Application               @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+
+  @@unique([applicationId, code])
+  @@index([applicationId, status])
+  @@map("compliance_findings")
+}
+
+model ApplicationDecisionRecord {
+  id                String                     @id @default(uuid()) @db.Uuid
+  applicationId     String                     @map("application_id") @db.Uuid
+  actorId           String                     @map("actor_id") @db.Uuid
+  outcome           ApplicationDecisionOutcome
+  decisionType      DecisionType?              @map("decision_type")
+  fromState         ApplicationState           @map("from_state")
+  toState           ApplicationState           @map("to_state")
+  justification     String
+  conditions        Json?
+  allowedActivities String?                    @map("allowed_activities")
+  refusalReasons    Json?                      @map("refusal_reasons")
+  createdAt         DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  application       Application                @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  actor             User                       @relation("DecisionActors", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("application_decision_records")
+}
+
+model InformationLetter {
+  id            String                  @id @default(uuid()) @db.Uuid
+  applicationId String                  @map("application_id") @db.Uuid
+  issuedById    String                  @map("issued_by_id") @db.Uuid
+  subject       String
+  body          String
+  status        InformationLetterStatus @default(ISSUED)
+  responseDueAt DateTime                @map("response_due_at") @db.Timestamptz(3)
+  issuedAt      DateTime                @default(now()) @map("issued_at") @db.Timestamptz(3)
+  respondedAt   DateTime?               @map("responded_at") @db.Timestamptz(3)
+  application   Application             @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  issuedBy      User                    @relation("InformationLetterIssuers", fields: [issuedById], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, issuedAt])
+  @@index([status, responseDueAt])
+  @@map("information_letters")
+}
+
+model ApplicationSlaClock {
+  id            String           @id @default(uuid()) @db.Uuid
+  applicationId String           @map("application_id") @db.Uuid
+  state         ApplicationState
+  startedAt     DateTime         @default(now()) @map("started_at") @db.Timestamptz(3)
+  dueAt         DateTime         @map("due_at") @db.Timestamptz(3)
+  stoppedAt     DateTime?        @map("stopped_at") @db.Timestamptz(3)
+  breachedAt    DateTime?        @map("breached_at") @db.Timestamptz(3)
+  application   Application      @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, state])
+  @@index([dueAt, stoppedAt, breachedAt])
+  @@map("application_sla_clocks")
+}
+
+model ApplicationFee {
+  id              String               @id @default(uuid()) @db.Uuid
+  applicationId   String               @map("application_id") @db.Uuid
+  amountRwf       BigInt               @map("amount_rwf")
+  status          FeeStatus            @default(PENDING)
+  proofDocumentId String?              @map("proof_document_id") @db.Uuid
+  submittedAt     DateTime?            @map("submitted_at") @db.Timestamptz(3)
+  verifiedAt      DateTime?            @map("verified_at") @db.Timestamptz(3)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  application     Application          @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  proofDocument   ApplicationDocument? @relation("FeeProofDocument", fields: [proofDocumentId], references: [id], onDelete: Restrict)
+
+  @@unique([applicationId])
+  @@index([status])
+  @@map("application_fees")
+}
