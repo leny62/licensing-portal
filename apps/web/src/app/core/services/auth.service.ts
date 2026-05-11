@@ -15,6 +15,7 @@ import {
 } from '../interfaces/auth.interface';
 import { AuthenticatedUser, UserResponse } from '../interfaces/user.interface';
 import { roleHome } from '../utils/role-home';
+import { browserId } from '../utils/browser-id';
 import { ApiService } from './api.service';
 import { SKIP_AUTH, SKIP_REFRESH } from '../interceptors/http-context';
 import '../interfaces/electron.interface';
@@ -228,7 +229,7 @@ export class AuthService {
       return existing;
     }
 
-    const id = crypto.randomUUID();
+    const id = browserId();
     sessionStorage.setItem(DEVICE_ID_KEY, id);
     return id;
   }
