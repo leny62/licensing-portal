@@ -1,5 +1,11 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import { ApplicationDocument, ApplicationState, UserRole } from '@prisma/client';
+import {
+  Application,
+  ApplicationDocument,
+  ApplicationState,
+  DocumentSlot as PrismaDocumentSlot,
+  UserRole,
+} from '@prisma/client';
 
 import { ConflictError, ResourceNotFoundError } from '../../common/errors/domain.errors';
 import { AuditService } from '../../infra/audit/audit.service';
@@ -14,6 +20,7 @@ import {
 } from './interfaces/document-response.interface';
 import { prepareDocumentUploadStream } from './upload-stream';
 import { ApplicationAction } from '../applications/enums/application-action.enum';
+import { canViewApplication } from '../applications/access-policy';
 
 @Injectable()
 export class DocumentsService {
@@ -28,35 +35,44 @@ export class DocumentsService {
     input: UploadDocumentInput,
   ): Promise<ApplicationDocumentResponse> {
     const application = await this.prisma.application.findUnique({
-      where: { id: input.applicationId },
+      where: this.applicationWhere(input.applicationId),
     });
 
     if (application === null) {
       throw new ResourceNotFoundError('Application not found.');
     }
 
-    if (
-      actor.id !== application.applicantId ||
-      (application.state !== ApplicationState.DRAFT &&
-        application.state !== ApplicationState.CHANGES_REQUESTED)
-    ) {
-      throw new ForbiddenException('Only the applicant can upload documents in editable states.');
+    const spec = await this.prisma.documentSlotSpec.findUnique({
+      where: { slot: input.slot as PrismaDocumentSlot },
+    });
+    const maxBytes = spec?.maxBytes ?? 5 * 1024 * 1024;
+    const ownerRole = spec?.ownerRole ?? UserRole.APPLICANT;
+
+    if (ownerRole !== actor.role) {
+      throw new ForbiddenException('This document slot is not owned by this account role.');
     }
 
-    const prepared = await prepareDocumentUploadStream(input.stream, 5 * 1024 * 1024);
+    this.assertCanUploadSlot(actor, application, ownerRole);
+
+    const prepared = await prepareDocumentUploadStream(input.stream, maxBytes);
+
+    if (spec !== null && !spec.allowedMimeTypes.includes(prepared.mimeType)) {
+      throw new ConflictError('Document MIME type is not allowed for this slot.');
+    }
+
     const stored = await this.documentStorage.put(prepared.stream);
 
     try {
       const row = await this.prisma.transactional(async (tx) => {
         const latest = await tx.applicationDocument.findFirst({
-          where: { applicationId: input.applicationId, slot: input.slot },
+          where: { applicationId: application.id, slot: input.slot },
           orderBy: { version: 'desc' },
         });
         const version = (latest?.version ?? 0) + 1;
 
         const document = await tx.applicationDocument.create({
           data: {
-            applicationId: input.applicationId,
+            applicationId: application.id,
             slot: input.slot,
             version,
             originalFilename: input.originalFilename,
@@ -71,7 +87,7 @@ export class DocumentsService {
         });
 
         await this.auditService.write(tx, {
-          applicationId: input.applicationId,
+          applicationId: application.id,
           actorId: actor.id,
           action: ApplicationAction.UploadDocument,
           fromState: application.state,
@@ -104,10 +120,10 @@ export class DocumentsService {
     actor: AuthenticatedUser,
     applicationId: string,
   ): Promise<ApplicationDocumentResponse[]> {
-    await this.verifyApplicationAccess(actor, applicationId);
+    const application = await this.verifyApplicationAccess(actor, applicationId);
 
     const documents = await this.prisma.applicationDocument.findMany({
-      where: { applicationId },
+      where: { applicationId: application.id },
       orderBy: [{ slot: 'asc' }, { version: 'desc' }],
     });
 
@@ -142,23 +158,25 @@ export class DocumentsService {
   private async verifyApplicationAccess(
     actor: AuthenticatedUser,
     applicationId: string,
-  ): Promise<void> {
-    if (actor.role !== UserRole.APPLICANT) {
-      return;
-    }
-
+  ): Promise<{ id: string; applicantId: string }> {
     const application = await this.prisma.application.findUnique({
-      where: { id: applicationId },
-      select: { applicantId: true },
+      where: this.applicationWhere(applicationId),
+      select: { id: true, applicantId: true },
     });
 
     if (application === null) {
       throw new ResourceNotFoundError('Application not found.');
     }
 
+    if (actor.role !== UserRole.APPLICANT) {
+      return application;
+    }
+
     if (application.applicantId !== actor.id) {
       throw new ForbiddenException();
     }
+
+    return application;
   }
 
   private mapDocument(document: ApplicationDocument): ApplicationDocumentResponse {
@@ -174,7 +192,48 @@ export class DocumentsService {
     };
   }
 
+  private assertCanUploadSlot(
+    actor: AuthenticatedUser,
+    application: Application,
+    ownerRole: UserRole,
+  ): void {
+    if (!canViewApplication(actor, application)) {
+      throw new ForbiddenException('Access denied.');
+    }
+
+    if (ownerRole === UserRole.APPLICANT) {
+      if (
+        actor.id !== application.applicantId ||
+        (application.state !== ApplicationState.DRAFT &&
+          application.state !== ApplicationState.AWAITING_APPLICANT_RESPONSE)
+      ) {
+        throw new ForbiddenException('Only the applicant can upload documents in editable states.');
+      }
+      return;
+    }
+
+    if (ownerRole === UserRole.REVIEWER && application.state !== ApplicationState.UNDER_REVIEW) {
+      throw new ForbiddenException('Reviewer document slots are only editable during review.');
+    }
+
+    if (
+      ownerRole === UserRole.APPROVER &&
+      application.state !== ApplicationState.RECOMMENDED_FOR_APPROVAL &&
+      application.state !== ApplicationState.RECOMMENDED_FOR_REJECTION
+    ) {
+      throw new ForbiddenException('Approver document slots are only editable during decision.');
+    }
+  }
+
   private isUniqueConstraint(error: unknown): boolean {
     return (error as { code?: string }).code === 'P2002';
+  }
+
+  private applicationWhere(identifier: string): { id: string } | { referenceNumber: string } {
+    return this.isUuid(identifier) ? { id: identifier } : { referenceNumber: identifier };
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
   }
 }

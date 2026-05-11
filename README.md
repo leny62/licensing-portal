@@ -1,6 +1,6 @@
 # Licensing Portal
 
-Bank licensing and compliance portal for the National Bank of Rwanda. Replaces the manual, email-and-spreadsheet licensing process with an end-to-end workflow that has authenticated roles, a defined state machine, a Rwanda bank-licensing completeness checklist, an append-only audit trail, operational system logs, and versioned document handling.
+Bank licensing and compliance portal for the National Bank of Rwanda, implementing the requirements of BNR Regulation 2310-13 of 2018. Replaces the manual, email-and-spreadsheet licensing process with an end-to-end workflow that has authenticated roles, a defined state machine, a Rwanda bank-licensing completeness checklist, an append-only audit trail, operational system logs, and versioned document handling.
 
 Monorepo, npm workspaces.
 

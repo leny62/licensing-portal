@@ -4,6 +4,7 @@ import { DocumentSlot } from '../documents/enums/document-slot.enum';
 import { ComplianceCheckStatus } from './enums/compliance-check-status.enum';
 import {
   ComplianceChecklistEvidence,
+  ComplianceFindingResponse,
   ComplianceChecklistItem,
   ComplianceChecklistResponse,
   ComplianceChecklistSection,
@@ -18,6 +19,13 @@ export interface ComplianceApplicationInput {
   bankCategory: BankCategory;
   paidUpCapitalRwf: Prisma.Decimal | string | number;
   country: string;
+  requiredPaidUpCapitalRwf?: number;
+  capitalDeclarationAmountRwf?: string | number | null;
+  shareholderCount?: number;
+  shareholderOwnershipTotal?: number;
+  hasRequiredSeniorManagers?: boolean;
+  feeProofSubmitted?: boolean;
+  shareholderFitAndProperFailed?: boolean;
 }
 
 export interface ComplianceDocumentInput {
@@ -141,8 +149,14 @@ export const buildComplianceChecklist = (
   application: ComplianceApplicationInput,
   documents: ComplianceDocumentInput[],
 ): ComplianceChecklistResponse => {
-  const requiredCapital = requiredPaidUpCapitalRwf(application.bankCategory);
+  const requiredCapital =
+    application.requiredPaidUpCapitalRwf ?? requiredPaidUpCapitalRwf(application.bankCategory);
   const paidUpCapital = Number(application.paidUpCapitalRwf.toString());
+  const declaredCapital =
+    application.capitalDeclarationAmountRwf === undefined ||
+    application.capitalDeclarationAmountRwf === null
+      ? 0
+      : Number(application.capitalDeclarationAmountRwf.toString());
   const foreignApplicant = application.applicationKind === ApplicationKind.FOREIGN_SUBSIDIARY;
   const sections: ComplianceChecklistSection[] = [
     {
@@ -160,6 +174,81 @@ export const buildComplianceChecklist = (
           regulatoryBasis: articleFour,
           requiredSlots: [],
           evidence: [],
+        },
+        {
+          id: 'capital-declaration',
+          title: 'Capital declaration',
+          description:
+            'Applicant must attest the paid-up capital amount and source of funds before submission.',
+          status:
+            declaredCapital >= requiredCapital
+              ? ComplianceCheckStatus.Complete
+              : ComplianceCheckStatus.Missing,
+          blocking: true,
+          regulatoryBasis: articleFour,
+          requiredSlots: [DocumentSlot.CapitalStructure],
+          evidence: evidenceFor(DocumentSlot.CapitalStructure, documents),
+        },
+        {
+          id: 'application-fee-recorded',
+          title: 'Application fee proof recorded',
+          description: 'Proof of payment must be linked to the application fee record.',
+          status:
+            application.feeProofSubmitted === true
+              ? ComplianceCheckStatus.Complete
+              : ComplianceCheckStatus.Missing,
+          blocking: true,
+          regulatoryBasis: `${articleTen}; ${articleEleven}(9)`,
+          requiredSlots: [DocumentSlot.ApplicationFeeProof],
+          evidence: evidenceFor(DocumentSlot.ApplicationFeeProof, documents),
+        },
+      ],
+    },
+    {
+      id: 'governance',
+      title: 'Ownership and management declarations',
+      items: [
+        {
+          id: 'significant-shareholders-declared',
+          title: 'Significant shareholders declared',
+          description:
+            'Applicant must declare significant shareholders and funding sources for ownership transparency review.',
+          status:
+            (application.shareholderCount ?? 0) > 0 &&
+            (application.shareholderOwnershipTotal ?? 0) <= 100
+              ? ComplianceCheckStatus.Complete
+              : ComplianceCheckStatus.Missing,
+          blocking: true,
+          regulatoryBasis: articleFive,
+          requiredSlots: [DocumentSlot.ShareholderInformationSheet],
+          evidence: evidenceFor(DocumentSlot.ShareholderInformationSheet, documents),
+        },
+        {
+          id: 'significant-shareholder-fit-and-proper',
+          title: 'Significant shareholder fit-and-proper review',
+          description: 'No significant shareholder may remain failed after fit-and-proper review.',
+          status:
+            application.shareholderFitAndProperFailed === true
+              ? ComplianceCheckStatus.Missing
+              : ComplianceCheckStatus.Complete,
+          blocking: true,
+          regulatoryBasis: articleFive,
+          requiredSlots: [DocumentSlot.FitAndProperForm],
+          evidence: evidenceFor(DocumentSlot.FitAndProperForm, documents),
+        },
+        {
+          id: 'senior-manager-role-minimums',
+          title: 'Senior manager role minimums',
+          description:
+            'Chief executive, finance, risk, and compliance roles must be declared with fit-and-proper attestation.',
+          status:
+            application.hasRequiredSeniorManagers === true
+              ? ComplianceCheckStatus.Complete
+              : ComplianceCheckStatus.Missing,
+          blocking: true,
+          regulatoryBasis: `${articleFive}; ${articleSixToEight}`,
+          requiredSlots: [DocumentSlot.FitAndProperForm],
+          evidence: evidenceFor(DocumentSlot.FitAndProperForm, documents),
         },
       ],
     },
@@ -229,6 +318,7 @@ export const buildComplianceChecklist = (
     requiredPaidUpCapitalRwf: requiredCapital,
     summary: summarize(sections),
     sections,
+    findings: findingsFor(sections),
   };
 };
 
@@ -287,3 +377,19 @@ const summarize = (sections: ComplianceChecklistSection[]): ComplianceChecklistS
     ).length,
   };
 };
+
+const findingsFor = (sections: ComplianceChecklistSection[]): ComplianceFindingResponse[] =>
+  sections.flatMap((section) =>
+    section.items
+      .filter((item) => item.status !== ComplianceCheckStatus.Complete)
+      .map((item) => ({
+        code: `${section.id}.${item.id}`,
+        section: section.title,
+        title: item.title,
+        detail: item.description,
+        severity: item.blocking ? 'BLOCKING' : 'WARNING',
+        regulatoryBasis: item.regulatoryBasis,
+        requiredSlots: item.requiredSlots,
+        evidence: item.evidence,
+      })),
+  );

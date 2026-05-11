@@ -29,6 +29,7 @@ export interface FieldConfig {
   validators?: ValidatorFn[];
   options?: SelectOption[];
   selectData?: string;
+  multiple?: boolean;
   children?: FieldConfig[];
   visible?: boolean | ((value: Record<string, unknown>) => boolean);
   showIf?: {

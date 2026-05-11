@@ -21,7 +21,8 @@ export const canEditApplication = (
   return (
     user?.role === UserRole.Applicant &&
     user.id === application.applicantId &&
-    application.state === ApplicationState.Draft
+    (application.state === ApplicationState.Draft ||
+      application.state === ApplicationState.AwaitingApplicantResponse)
   );
 };
 
@@ -29,7 +30,11 @@ export const canSubmitApplication = (
   user: AuthenticatedUser | null,
   application: ApplicationResponse,
 ): boolean => {
-  return canEditApplication(user, application);
+  return (
+    user?.role === UserRole.Applicant &&
+    user.id === application.applicantId &&
+    application.state === ApplicationState.Draft
+  );
 };
 
 export const canWithdrawApplication = (
@@ -43,7 +48,7 @@ export const canWithdrawApplication = (
       ApplicationState.Draft,
       ApplicationState.Submitted,
       ApplicationState.UnderReview,
-      ApplicationState.ChangesRequested,
+      ApplicationState.AwaitingApplicantResponse,
     ].includes(application.state)
   );
 };
@@ -55,7 +60,7 @@ export const canResubmitApplication = (
   return (
     user?.role === UserRole.Applicant &&
     user.id === application.applicantId &&
-    application.state === ApplicationState.ChangesRequested
+    application.state === ApplicationState.AwaitingApplicantResponse
   );
 };
 

@@ -17,7 +17,10 @@ const commonFilters: TableConfig<ApplicationResponse>['filters'] = [
       { label: 'Draft', value: ApplicationState.Draft },
       { label: 'Submitted', value: ApplicationState.Submitted },
       { label: 'Under review', value: ApplicationState.UnderReview },
-      { label: 'Changes requested', value: ApplicationState.ChangesRequested },
+      {
+        label: 'Awaiting applicant response',
+        value: ApplicationState.AwaitingApplicantResponse,
+      },
       { label: 'Recommended approval', value: ApplicationState.RecommendedForApproval },
       { label: 'Recommended rejection', value: ApplicationState.RecommendedForRejection },
       { label: 'Approved', value: ApplicationState.Approved },
@@ -61,9 +64,11 @@ export const applicantApplicationTableConfig = configWithActions('My application
   viewAction,
   {
     id: 'edit',
-    label: 'Edit draft',
+    label: 'Edit',
     icon: 'edit',
-    visible: (row) => row.state === ApplicationState.Draft,
+    visible: (row) =>
+      row.state === ApplicationState.Draft ||
+      row.state === ApplicationState.AwaitingApplicantResponse,
   },
   {
     id: 'submit',
@@ -82,7 +87,7 @@ export const applicantApplicationTableConfig = configWithActions('My application
         ApplicationState.Draft,
         ApplicationState.Submitted,
         ApplicationState.UnderReview,
-        ApplicationState.ChangesRequested,
+        ApplicationState.AwaitingApplicantResponse,
       ].includes(row.state),
   },
   {
@@ -90,7 +95,7 @@ export const applicantApplicationTableConfig = configWithActions('My application
     label: 'Resubmit',
     icon: 'replay',
     tone: 'success',
-    visible: (row) => row.state === ApplicationState.ChangesRequested,
+    visible: (row) => row.state === ApplicationState.AwaitingApplicantResponse,
   },
 ]);
 

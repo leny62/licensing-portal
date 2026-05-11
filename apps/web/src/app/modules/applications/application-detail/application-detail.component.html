@@ -75,8 +75,19 @@
       </div>
     </section>
 
+    @if (hasBreachedClock) {
+      <div class="sla-breach-banner" role="alert">
+        <mat-icon aria-hidden="true">warning</mat-icon>
+        <span>SLA breach: this application is past its absolute decision deadline.</span>
+      </div>
+    }
+
     <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <mat-tab-group class="detail-tabs" animationDuration="180ms" [(selectedIndex)]="selectedTabIndex">
+      <mat-tab-group
+        class="detail-tabs"
+        animationDuration="180ms"
+        [(selectedIndex)]="selectedTabIndex"
+      >
         <mat-tab label="Overview">
           <section class="tab-panel">
             <div class="surface detail-card p-4">
@@ -160,9 +171,9 @@
                   </div>
                 </div>
 
-                @if (blockingComplianceItems().length > 0) {
+                @if (blockingComplianceItems.length > 0) {
                   <div class="gap-list">
-                    @for (item of blockingComplianceItems(); track item.id) {
+                    @for (item of blockingComplianceItems; track item.id + ':' + $index) {
                       <article class="gap-item">
                         <mat-icon aria-hidden="true">priority_high</mat-icon>
                         <div class="min-w-0">
@@ -224,7 +235,7 @@
                     <span role="columnheader">Status</span>
                     <span role="columnheader">Action</span>
                   </div>
-                  @for (item of uploadableRequirements(); track item.id) {
+                  @for (item of uploadableRequirements; track item.id + ':' + $index) {
                     <div class="requirement-row" role="row">
                       <div role="cell" class="min-w-0">
                         <strong>{{ item.title }}</strong>
@@ -349,6 +360,27 @@
                 </div>
               }
             </div>
+
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Document controls</p>
+                  <h2>Slot specifications</h2>
+                  <p>Allowed evidence types, ownership, and regulatory basis.</p>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <app-table
+                  [config]="documentSlotSpecsTableConfig"
+                  [data]="documentSlotSpecs"
+                  [isLoading]="regulatoryLoading"
+                  [showSearch]="false"
+                  [showFilter]="false"
+                  [pageSize]="10"
+                ></app-table>
+              </div>
+            </div>
             <input
               #fileInput
               type="file"
@@ -356,6 +388,440 @@
               class="hidden"
               (change)="onFileSelected($event)"
             />
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Capital & ownership">
+          <section class="tab-panel">
+            @if (regulatoryError) {
+              <app-error-state
+                title="Regulatory records unavailable"
+                message="Refresh this application to try again."
+                (retry)="load()"
+              ></app-error-state>
+            } @else {
+              <div class="surface detail-card p-4">
+                <div class="card-heading">
+                  <div>
+                    <p class="section-kicker">Paid-up capital</p>
+                    <h2>Capital declaration</h2>
+                    <p>
+                      Minimum required:
+                      {{
+                        compliance === null
+                          ? 'Not loaded'
+                          : formattedRwf(compliance.requiredPaidUpCapitalRwf.toString())
+                      }}
+                    </p>
+                  </div>
+                  <span class="metric-pill">
+                    {{
+                      capitalDeclaration === null
+                        ? 'Not declared'
+                        : formattedRwf(capitalDeclaration.amountRwf)
+                    }}
+                  </span>
+                </div>
+
+                @if (canEditRegulatory()) {
+                  <form
+                    [formGroup]="capitalForm"
+                    class="regulatory-form mt-4"
+                    (ngSubmit)="saveCapitalDeclaration()"
+                  >
+                    @for (field of capitalDeclarationFields; track field.name) {
+                      <app-inputs [field]="field" [group]="capitalForm"></app-inputs>
+                    }
+                    <div class="form-actions">
+                      <app-button type="submit" icon="save" [loading]="regulatorySaving">
+                        Save capital
+                      </app-button>
+                    </div>
+                  </form>
+                } @else if (capitalDeclaration !== null) {
+                  <div class="summary-block">
+                    <p>{{ capitalDeclaration.sourceSummary }}</p>
+                  </div>
+                }
+              </div>
+
+              <div class="surface detail-card p-4">
+                <div class="card-heading">
+                  <div>
+                    <p class="section-kicker">Ownership</p>
+                    <h2>Significant shareholders</h2>
+                    <p>Total declared ownership: {{ totalOwnershipLabel() }}</p>
+                  </div>
+                </div>
+
+                @if (canEditRegulatory()) {
+                  <form
+                    [formGroup]="shareholderForm"
+                    class="regulatory-form mt-4"
+                    (ngSubmit)="saveShareholder()"
+                  >
+                    @for (field of shareholderFields; track field.name) {
+                      <app-inputs
+                        [field]="field"
+                        [group]="shareholderForm"
+                        [formSelectData]="regulatorySelectData()"
+                      ></app-inputs>
+                    }
+                    <div class="form-actions">
+                      @if (editingShareholderId !== null) {
+                        <app-button type="button" variant="ghost" (click)="resetShareholderForm()">
+                          Cancel
+                        </app-button>
+                      }
+                      <app-button type="submit" icon="save" [loading]="regulatorySaving">
+                        {{ editingShareholderId === null ? 'Add shareholder' : 'Save shareholder' }}
+                      </app-button>
+                    </div>
+                  </form>
+                }
+
+                <div class="mt-4">
+                  <app-table
+                    [config]="shareholdersConfig()"
+                    [data]="shareholders"
+                    [isLoading]="regulatoryLoading"
+                    [showSearch]="false"
+                    [showFilter]="false"
+                    [pageSize]="10"
+                    (actionClick)="handleShareholderAction($event)"
+                  ></app-table>
+                </div>
+              </div>
+            }
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Management">
+          <section class="tab-panel">
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Fit and proper</p>
+                  <h2>Required senior roles</h2>
+                  <p>Core roles must have attested fit-and-proper evidence.</p>
+                </div>
+              </div>
+
+              <div class="manager-role-grid">
+                @for (role of requiredManagerRoles; track role) {
+                  <div [class.role-complete]="managerRolePresent(role)">
+                    <mat-icon aria-hidden="true">
+                      {{ managerRolePresent(role) ? 'check_circle' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                    <span>{{ managerRoleLabel(role) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Senior management</p>
+                  <h2>Managers and control functions</h2>
+                </div>
+              </div>
+
+              @if (canEditRegulatory()) {
+                <form
+                  [formGroup]="seniorManagerForm"
+                  class="regulatory-form mt-4"
+                  (ngSubmit)="saveSeniorManager()"
+                >
+                  @for (field of seniorManagerFields; track field.name) {
+                    <app-inputs
+                      [field]="field"
+                      [group]="seniorManagerForm"
+                      [formSelectData]="regulatorySelectData()"
+                    ></app-inputs>
+                  }
+                  <div class="form-actions">
+                    @if (editingSeniorManagerId !== null) {
+                      <app-button type="button" variant="ghost" (click)="resetSeniorManagerForm()">
+                        Cancel
+                      </app-button>
+                    }
+                    <app-button type="submit" icon="save" [loading]="regulatorySaving">
+                      {{ editingSeniorManagerId === null ? 'Add manager' : 'Save manager' }}
+                    </app-button>
+                  </div>
+                </form>
+              }
+
+              <div class="mt-4">
+                <app-table
+                  [config]="seniorManagersConfig()"
+                  [data]="seniorManagers"
+                  [isLoading]="regulatoryLoading"
+                  [showSearch]="false"
+                  [showFilter]="false"
+                  [pageSize]="10"
+                  (actionClick)="handleSeniorManagerAction($event)"
+                ></app-table>
+              </div>
+            </div>
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Fees & letters">
+          <section class="tab-panel">
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Application fee</p>
+                  <h2>Payment proof</h2>
+                  <p>Upload the payment proof under the application fee proof slot.</p>
+                </div>
+                @if (fee !== null) {
+                  <app-status-badge [state]="fee.status"></app-status-badge>
+                }
+              </div>
+
+              <div class="fee-grid">
+                <div>
+                  <span>Amount</span>
+                  <strong>{{ fee === null ? 'Not created' : formattedRwf(fee.amountRwf) }}</strong>
+                </div>
+                <div>
+                  <span>Submitted</span>
+                  <strong>{{ fee === null ? 'Not submitted' : formatted(fee.submittedAt) }}</strong>
+                </div>
+                <div>
+                  <span>Verified</span>
+                  <strong>{{ fee === null ? 'Not verified' : formatted(fee.verifiedAt) }}</strong>
+                </div>
+              </div>
+
+              @if (feeProofDocument(); as proofDocument) {
+                <div class="linked-document">
+                  <mat-icon aria-hidden="true">receipt_long</mat-icon>
+                  <div>
+                    <strong>{{ proofDocument.originalFilename }}</strong>
+                    <span
+                      >v{{ proofDocument.version }} · {{ formatted(proofDocument.createdAt) }}</span
+                    >
+                  </div>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Preview payment proof"
+                    aria-label="Preview payment proof"
+                    (click)="previewDocument(proofDocument)"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
+              }
+
+              @if (canEditRegulatory()) {
+                <div class="form-actions mt-4">
+                  <app-button
+                    type="button"
+                    variant="secondary"
+                    icon="upload"
+                    [loading]="feeProofLoading"
+                    [disabled]="fee !== null && fee.status !== FeeStatus.Pending"
+                    [matTooltip]="fee !== null && fee.status !== FeeStatus.Pending ? 'Payment proof has already been submitted' : ''"
+                    (click)="selectFeeProofFile()"
+                  >
+                    Upload proof
+                  </app-button>
+                </div>
+                <input
+                  #feeProofInput
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  class="hidden"
+                  (change)="onFeeProofSelected($event)"
+                />
+              }
+            </div>
+
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Formal correspondence</p>
+                  <h2>Information letters</h2>
+                </div>
+              </div>
+
+              @if (canIssueInformationLetter()) {
+                <form
+                  [formGroup]="informationLetterForm"
+                  class="regulatory-form mt-4"
+                  (ngSubmit)="issueInformationLetter()"
+                >
+                  <div class="letter-type-row" style="grid-column: 1 / -1;">
+                    <label class="letter-type-label">Letter type</label>
+                    <div class="letter-type-options">
+                      <label class="letter-type-option">
+                        <input type="radio" formControlName="letterType" value="COMPLETE" />
+                        <span>Complete</span>
+                      </label>
+                      <label class="letter-type-option">
+                        <input type="radio" formControlName="letterType" value="DEFICIENT" />
+                        <span>Deficient</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  @for (field of informationLetterFields; track field.name) {
+                    <app-inputs [field]="field" [group]="informationLetterForm"></app-inputs>
+                  }
+
+                  @if (isDeficientLetter) {
+                    <div class="deficiency-section" style="grid-column: 1 / -1;">
+                      <p class="deficiency-heading">Deficiencies</p>
+                      @if (deficiencyRows.length > 0) {
+                        <ul class="deficiency-list">
+                          @for (row of deficiencyRows; track $index) {
+                            <li>
+                              <span>{{ row.entity }}</span>
+                              <span>{{ row.reason }}</span>
+                              <span>{{ row.rectificationDeadline }}</span>
+                              <button
+                                type="button"
+                                mat-icon-button
+                                aria-label="Remove deficiency"
+                                (click)="removeDeficiencyRow($index)"
+                              >
+                                <mat-icon>close</mat-icon>
+                              </button>
+                            </li>
+                          }
+                        </ul>
+                      }
+                      <div class="deficiency-add regulatory-form">
+                        @for (field of deficiencyFields; track field.name) {
+                          <app-inputs [field]="field" [group]="deficiencyForm"></app-inputs>
+                        }
+                        <div class="form-actions">
+                          <app-button type="button" variant="secondary" icon="add" (click)="addDeficiencyRow()">
+                            Add deficiency
+                          </app-button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="form-actions">
+                    <app-button type="submit" icon="outgoing_mail" [loading]="regulatorySaving">
+                      Issue letter
+                    </app-button>
+                  </div>
+                </form>
+
+                @if (lastIssuedLetter !== null) {
+                  <div class="issued-letter-download">
+                    <mat-icon aria-hidden="true">task</mat-icon>
+                    <span>Letter issued — download now or find it in the table below.</span>
+                    <app-button variant="secondary" icon="download" (click)="downloadLastIssuedLetter()">
+                      Download letter
+                    </app-button>
+                  </div>
+                }
+              }
+
+              <div class="mt-4">
+                <app-table
+                  [config]="informationLettersTableConfig"
+                  [data]="informationLetters"
+                  [isLoading]="regulatoryLoading"
+                  [showSearch]="false"
+                  [showFilter]="false"
+                  [pageSize]="10"
+                  (actionClick)="handleInformationLetterAction($event)"
+                ></app-table>
+              </div>
+            </div>
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Findings & decisions">
+          <section class="tab-panel">
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Compliance</p>
+                  <h2>Structured findings</h2>
+                </div>
+                @if (openBlockingFindingCount > 0) {
+                  <span class="badge-blocking">
+                    {{ openBlockingFindingCount }} blocking
+                  </span>
+                }
+              </div>
+              <div class="mt-3">
+                <app-table
+                  [config]="complianceFindingsTableConfig"
+                  [data]="sortedComplianceFindings"
+                  [isLoading]="regulatoryLoading"
+                  [showSearch]="false"
+                  [showFilter]="false"
+                  [pageSize]="10"
+                ></app-table>
+              </div>
+            </div>
+
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">Decision record</p>
+                  <h2>Recommendations and outcomes</h2>
+                </div>
+              </div>
+              <div class="mt-3">
+                <app-table
+                  [config]="decisionsTableConfig"
+                  [data]="decisions"
+                  [isLoading]="regulatoryLoading"
+                  [showSearch]="false"
+                  [showFilter]="false"
+                  [pageSize]="10"
+                ></app-table>
+              </div>
+            </div>
+
+            <div class="surface detail-card p-4">
+              <div class="card-heading">
+                <div>
+                  <p class="section-kicker">SLA monitoring</p>
+                  <h2>Review clocks</h2>
+                </div>
+              </div>
+              @if (regulatoryLoading) {
+                <app-loading-state label="Loading SLA clocks"></app-loading-state>
+              } @else if (slaClocks.length === 0) {
+                <p class="empty-hint mt-3">SLA clocks are created when applications move through review states.</p>
+              } @else {
+                <div class="sla-clock-list mt-3">
+                  @for (clock of slaClocks; track clock.id) {
+                    <div class="sla-clock-row">
+                      <div class="sla-clock-meta">
+                        <span class="sla-state-label sla-state-{{ slaClockState(clock) }}">
+                          {{ slaClockState(clock) | titlecase }}
+                        </span>
+                        <span class="sla-dates">
+                          Started {{ formatted(clock.startedAt) }} · Due {{ formatted(clock.dueAt) }}
+                        </span>
+                      </div>
+                      <div class="sla-progress-track">
+                        <div
+                          class="sla-progress-fill sla-fill-{{ slaClockState(clock) }}"
+                          [style.width.%]="slaProgress(clock)"
+                        ></div>
+                      </div>
+                      <span class="sla-progress-label">{{ slaProgressLabel(clock) }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           </section>
         </mat-tab>
 
@@ -445,6 +911,8 @@
                     variant="success"
                     icon="thumb_up"
                     [loading]="actionLoading"
+                    [disabled]="openBlockingFindingCount > 0"
+                    [matTooltip]="openBlockingFindingCount > 0 ? 'Resolve ' + openBlockingFindingCount + ' blocking finding(s) before recommending' : ''"
                     (click)="recommend(ApplicationDecision.Approve)"
                   >
                     Recommend approval
@@ -453,6 +921,8 @@
                     variant="danger"
                     icon="thumb_down"
                     [loading]="actionLoading"
+                    [disabled]="openBlockingFindingCount > 0"
+                    [matTooltip]="openBlockingFindingCount > 0 ? 'Resolve ' + openBlockingFindingCount + ' blocking finding(s) before recommending' : ''"
                     (click)="recommend(ApplicationDecision.Reject)"
                   >
                     Recommend rejection
@@ -461,22 +931,14 @@
               }
 
               @if (canDecide()) {
-                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                <div class="grid gap-2">
                   <app-button
-                    variant="success"
-                    icon="check"
+                    variant="primary"
+                    icon="gavel"
                     [loading]="actionLoading"
-                    (click)="decide(ApplicationDecision.Approve)"
+                    (click)="openDecisionDialog()"
                   >
-                    Approve
-                  </app-button>
-                  <app-button
-                    variant="danger"
-                    icon="close"
-                    [loading]="actionLoading"
-                    (click)="decide(ApplicationDecision.Reject)"
-                  >
-                    Reject
+                    Record decision
                   </app-button>
                 </div>
               }

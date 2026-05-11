@@ -1,19 +1,20 @@
 model ApplicationDocument {
-  id               String      @id @default(uuid()) @db.Uuid
-  applicationId    String      @map("application_id") @db.Uuid
+  id               String           @id @default(uuid()) @db.Uuid
+  applicationId    String           @map("application_id") @db.Uuid
   slot             String
   version          Int
-  originalFilename String      @map("original_filename")
-  mimeType         String      @map("mime_type")
-  sizeBytes        Int         @map("size_bytes")
-  storagePath      String      @map("storage_path")
-  wrappedDek       Bytes       @map("wrapped_dek")
+  originalFilename String           @map("original_filename")
+  mimeType         String           @map("mime_type")
+  sizeBytes        Int              @map("size_bytes")
+  storagePath      String           @map("storage_path")
+  wrappedDek       Bytes            @map("wrapped_dek")
   iv               Bytes
-  authTag          Bytes       @map("auth_tag")
-  uploaderId       String?     @map("uploader_id") @db.Uuid
-  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
-  application      Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
-  uploader         User?       @relation("UploadedDocuments", fields: [uploaderId], references: [id], onDelete: Restrict)
+  authTag          Bytes            @map("auth_tag")
+  uploaderId       String?          @map("uploader_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  application      Application      @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  uploader         User?            @relation("UploadedDocuments", fields: [uploaderId], references: [id], onDelete: Restrict)
+  feeProofs        ApplicationFee[] @relation("FeeProofDocument")
 
   @@unique([applicationId, slot, version])
   @@index([applicationId])

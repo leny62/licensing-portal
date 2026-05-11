@@ -123,7 +123,14 @@ export class SystemLogInterceptor implements NestInterceptor {
   }
 
   private shouldSkip(url: string): boolean {
-    return url === '/healthz' || url === '/metrics';
+    const path = url.split('?')[0] ?? url;
+
+    return (
+      path.endsWith('/healthz') ||
+      path.endsWith('/livez') ||
+      path.endsWith('/readyz') ||
+      path.endsWith('/metrics')
+    );
   }
 
   private safeUrl(url: string): string {

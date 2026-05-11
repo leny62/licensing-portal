@@ -1,4 +1,11 @@
-import { Application, ApplicationState, BankCategory, Prisma, UserRole } from '@prisma/client';
+import {
+  Application,
+  ApplicationKind,
+  ApplicationState,
+  BankCategory,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import { canEditDraft, canViewApplication } from '../../src/modules/applications/access-policy';
 
@@ -9,6 +16,7 @@ const application = (overrides: Partial<Application> = {}): Application => ({
   referenceNumber: 'APP-1',
   applicantId: 'applicant-1',
   institutionName: 'Policy Bank',
+  applicationKind: ApplicationKind.NEW_BANK,
   bankCategory: BankCategory.COMMERCIAL_BANK,
   paidUpCapitalRwf: new Prisma.Decimal(20000000000),
   legalForm: 'Limited Company',
@@ -53,8 +61,14 @@ describe('application access policy', () => {
     expect(canViewApplication({ id: actorId, role }, app)).toBe(expected);
   });
 
-  it('allows only the applicant to edit their own draft', () => {
+  it('allows only the applicant to edit their own editable application', () => {
     expect(canEditDraft({ id: 'applicant-1', role: UserRole.APPLICANT }, application())).toBe(true);
+    expect(
+      canEditDraft(
+        { id: 'applicant-1', role: UserRole.APPLICANT },
+        application({ state: ApplicationState.AWAITING_APPLICANT_RESPONSE }),
+      ),
+    ).toBe(true);
     expect(canEditDraft({ id: 'applicant-2', role: UserRole.APPLICANT }, application())).toBe(
       false,
     );

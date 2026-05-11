@@ -45,13 +45,14 @@ describe('application_audit append-only enforcement', () => {
     applicationId = '01d49f7d-37e3-492c-b6ac-c3f863a6ab53';
 
     await migrationClient.$executeRaw`
-      INSERT INTO users (id, email, password_hash, full_name, role)
+      INSERT INTO users (id, email, password_hash, full_name, role, updated_at)
       VALUES (
         ${actorId}::uuid,
         'applicant.audit@example.com',
         'hash',
         'Audit Applicant',
-        'APPLICANT'
+        'APPLICANT',
+        now()
       )
     `;
 
@@ -66,7 +67,8 @@ describe('application_audit append-only enforcement', () => {
         contact_person,
         contact_email,
         contact_phone,
-        summary
+        summary,
+        updated_at
       )
       VALUES (
         ${applicationId}::uuid,
@@ -78,7 +80,8 @@ describe('application_audit append-only enforcement', () => {
         'Audit Contact',
         'audit.contact@example.com',
         '+250700000000',
-        'Audit append-only fixture'
+        'Audit append-only fixture',
+        now()
       )
     `;
   });
@@ -92,6 +95,7 @@ describe('application_audit append-only enforcement', () => {
   it('allows INSERT and SELECT for licensing_app', async () => {
     await appClient.$executeRaw`
       INSERT INTO application_audit (
+        id,
         application_id,
         actor_id,
         action,
@@ -100,6 +104,7 @@ describe('application_audit append-only enforcement', () => {
         entry_hash
       )
       VALUES (
+        '11111111-1111-4111-8111-111111111111'::uuid,
         ${applicationId}::uuid,
         ${actorId}::uuid,
         'submit',

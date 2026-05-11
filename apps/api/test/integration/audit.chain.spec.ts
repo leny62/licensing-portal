@@ -32,13 +32,14 @@ describe('audit hash chain', () => {
     applicationId = 'b8483fb1-b2f0-4ac7-bf98-87c28ea0732a';
 
     await prisma.$executeRaw`
-      INSERT INTO users (id, email, password_hash, full_name, role)
+      INSERT INTO users (id, email, password_hash, full_name, role, updated_at)
       VALUES (
         ${actorId}::uuid,
         'audit.chain@example.com',
         'hash',
         'Audit Chain Applicant',
-        'APPLICANT'
+        'APPLICANT',
+        now()
       )
     `;
 
@@ -53,7 +54,8 @@ describe('audit hash chain', () => {
         contact_person,
         contact_email,
         contact_phone,
-        summary
+        summary,
+        updated_at
       )
       VALUES (
         ${applicationId}::uuid,
@@ -65,7 +67,8 @@ describe('audit hash chain', () => {
         'Audit Chain Contact',
         'audit.chain.contact@example.com',
         '+250700000001',
-        'Audit chain fixture'
+        'Audit chain fixture',
+        now()
       )
     `;
   });

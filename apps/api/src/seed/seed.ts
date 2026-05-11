@@ -3,10 +3,14 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
+  ApplicationKind,
   ApplicationState,
   BankCategory,
+  FeeStatus,
   NotificationType,
   PrismaClient,
+  SeniorManagerRole,
+  ShareholderType,
   User,
   UserRole,
 } from '@prisma/client';
@@ -14,6 +18,7 @@ import * as argon2 from 'argon2';
 import { config as loadEnv } from 'dotenv';
 
 import { AuditService } from '../infra/audit/audit.service';
+import { applicationFeeRwf } from '../modules/applications/application-fees';
 
 const AES_KEY_WRAP_ALGORITHM = 'id-aes256-wrap';
 const AES_KEY_WRAP_DEFAULT_IV = Buffer.alloc(8, 0xa6);
@@ -254,6 +259,151 @@ const createDocumentIfMissing = async (
   });
 };
 
+const createFeeIfMissing = async (
+  applicationId: string,
+  applicationKind: ApplicationKind,
+): Promise<void> => {
+  await prisma.applicationFee.upsert({
+    where: { applicationId },
+    update: { amountRwf: BigInt(applicationFeeRwf(applicationKind)) },
+    create: {
+      applicationId,
+      amountRwf: BigInt(applicationFeeRwf(applicationKind)),
+      status: FeeStatus.PENDING,
+    },
+  });
+};
+
+const createCapitalDeclarationIfMissing = async (
+  applicationId: string,
+  applicantId: string,
+  amountRwf: number,
+): Promise<void> => {
+  await prisma.capitalDeclaration.upsert({
+    where: { applicationId },
+    update: {},
+    create: {
+      applicationId,
+      amountRwf: BigInt(amountRwf),
+      sourceSummary: 'Seeded shareholder contributions for local workflow testing.',
+      attestedAt: new Date(),
+      attestedByUserId: applicantId,
+    },
+  });
+};
+
+const createShareholdersIfMissing = async (
+  applicationId: string,
+  applicantId: string,
+): Promise<void> => {
+  const count = await prisma.significantShareholder.count({ where: { applicationId } });
+
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.significantShareholder.createMany({
+    data: [
+      {
+        applicationId,
+        shareholderType: ShareholderType.LEGAL_ENTITY,
+        fullName: 'Kigali Holdings Ltd',
+        registrationNumber: 'TIN-102030405',
+        country: 'RW',
+        ownershipPercent: 65,
+        sourceOfFunds: 'Audited retained earnings and committed bank transfer.',
+        beneficialOwner: 'Aline Beneficial Owner',
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+      {
+        applicationId,
+        shareholderType: ShareholderType.NATURAL_PERSON,
+        fullName: 'Aline Shareholder',
+        registrationNumber: 'NID-1199000000000000',
+        country: 'RW',
+        ownershipPercent: 35,
+        sourceOfFunds: 'Declared investment income and salary savings.',
+        beneficialOwner: null,
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+    ],
+  });
+};
+
+const createSeniorManagersIfMissing = async (
+  applicationId: string,
+  applicantId: string,
+): Promise<void> => {
+  const count = await prisma.seniorManager.count({ where: { applicationId } });
+
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.seniorManager.createMany({
+    data: [
+      {
+        applicationId,
+        role: SeniorManagerRole.CHIEF_EXECUTIVE,
+        fullName: 'Aline Chief Executive',
+        email: 'ceo@seed-bank.local',
+        nationality: 'RW',
+        yearsExperience: 14,
+        fitAndProperAttested: true,
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+      {
+        applicationId,
+        role: SeniorManagerRole.CHIEF_FINANCE,
+        fullName: 'Fabrice Finance Lead',
+        email: 'finance@seed-bank.local',
+        nationality: 'RW',
+        yearsExperience: 11,
+        fitAndProperAttested: true,
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+      {
+        applicationId,
+        role: SeniorManagerRole.CHIEF_RISK,
+        fullName: 'Diane Risk Lead',
+        email: 'risk@seed-bank.local',
+        nationality: 'RW',
+        yearsExperience: 9,
+        fitAndProperAttested: true,
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+      {
+        applicationId,
+        role: SeniorManagerRole.CHIEF_COMPLIANCE,
+        fullName: 'Eric Compliance Lead',
+        email: 'compliance@seed-bank.local',
+        nationality: 'RW',
+        yearsExperience: 10,
+        fitAndProperAttested: true,
+        attestedAt: new Date(),
+        attestedByUserId: applicantId,
+      },
+    ],
+  });
+};
+
+const createRegulatoryRecordsIfMissing = async (
+  applicationId: string,
+  applicantId: string,
+  applicationKind: ApplicationKind,
+  paidUpCapitalRwf: number,
+): Promise<void> => {
+  await createFeeIfMissing(applicationId, applicationKind);
+  await createCapitalDeclarationIfMissing(applicationId, applicantId, paidUpCapitalRwf);
+  await createShareholdersIfMissing(applicationId, applicantId);
+  await createSeniorManagersIfMissing(applicationId, applicantId);
+};
+
 const upsertApplications = async (users: Map<UserRole, { id: string; email: string }>) => {
   const applicant = users.get(UserRole.APPLICANT);
   const reviewer = users.get(UserRole.REVIEWER);
@@ -332,6 +482,24 @@ const upsertApplications = async (users: Map<UserRole, { id: string; email: stri
   await createDocumentIfMissing(recommended.id, applicant.id, 'BUSINESS_PLAN', 1);
   await createDocumentIfMissing(recommended.id, applicant.id, 'FINANCIAL_STATEMENTS', 1);
   await createDocumentIfMissing(recommended.id, applicant.id, 'INCORPORATION_CERTIFICATE', 1);
+  await createRegulatoryRecordsIfMissing(
+    draft.id,
+    applicant.id,
+    draft.applicationKind,
+    20000000000,
+  );
+  await createRegulatoryRecordsIfMissing(
+    underReview.id,
+    applicant.id,
+    underReview.applicationKind,
+    25000000000,
+  );
+  await createRegulatoryRecordsIfMissing(
+    recommended.id,
+    applicant.id,
+    recommended.applicationKind,
+    10000000000,
+  );
   await createApplicationAuditIfMissing(draft.id, applicant.id, 'seed_draft_created', draft.state);
   await createApplicationAuditIfMissing(
     underReview.id,

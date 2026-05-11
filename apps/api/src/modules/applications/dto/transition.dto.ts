@@ -1,9 +1,35 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ApplicationState } from '@prisma/client';
+import { ApplicationState, DecisionType } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 import { ApplicationDecision } from '../enums/application-decision.enum';
+
+export class ConditionDto {
+  @IsString()
+  text!: string;
+
+  @IsString()
+  satisfactionDate!: string;
+}
+
+export class RefusalReasonDto {
+  @IsString()
+  reason!: string;
+
+  @IsString()
+  articleCitation!: string;
+}
 
 export class JustificationDto {
   @ApiProperty({
@@ -38,18 +64,37 @@ export class RecommendationDto {
 }
 
 export class DecisionDto {
-  @ApiProperty({
-    enum: ApplicationDecision,
-    example: ApplicationDecision.Approve,
-  })
+  @ApiProperty({ enum: ApplicationDecision, example: ApplicationDecision.Approve })
   @IsEnum(ApplicationDecision)
   decision!: ApplicationDecision;
 
-  @ApiProperty({
-    example: 'Final approval granted after review committee assessment.',
-  })
+  @ApiProperty({ example: 'Final approval granted after review committee assessment.' })
   @IsString()
   justification!: string;
+
+  @ApiPropertyOptional({ enum: DecisionType, example: DecisionType.GRANT })
+  @IsOptional()
+  @IsEnum(DecisionType)
+  decisionType?: DecisionType;
+
+  @ApiPropertyOptional({ type: [ConditionDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ConditionDto)
+  conditions?: ConditionDto[];
+
+  @ApiPropertyOptional({ example: 'Accept deposits; Grant credit facilities' })
+  @IsOptional()
+  @IsString()
+  allowedActivities?: string;
+
+  @ApiPropertyOptional({ type: [RefusalReasonDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RefusalReasonDto)
+  refusalReasons?: RefusalReasonDto[];
 }
 
 export class ListApplicationsQueryDto {

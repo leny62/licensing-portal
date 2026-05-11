@@ -1,0 +1,125 @@
+<div class="decision-dialog">
+  <div class="dialog-header">
+    <h2>Record decision</h2>
+    <p>{{ data.referenceNumber }} — select an outcome and provide mandatory justification.</p>
+  </div>
+
+  <mat-tab-group animationDuration="120ms">
+    <mat-tab label="Grant">
+      <div class="tab-body">
+        <form [formGroup]="grantForm" class="decision-form" (ngSubmit)="submitGrant()">
+          <app-inputs [field]="justificationField" [group]="grantForm"></app-inputs>
+          <div class="dialog-actions">
+            <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+            <app-button type="submit" variant="success" icon="check_circle"
+              >Grant licence</app-button
+            >
+          </div>
+        </form>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Grant with conditions">
+      <div class="tab-body">
+        <form
+          [formGroup]="conditionsForm"
+          class="decision-form"
+          (ngSubmit)="submitGrantWithConditions()"
+        >
+          <app-inputs [field]="justificationField" [group]="conditionsForm"></app-inputs>
+
+          <div class="condition-section">
+            <p class="condition-heading">Conditions</p>
+            @if (conditionsArray.length > 0) {
+              <ul class="condition-list">
+                @for (condition of conditionsArray.controls; track $index) {
+                  <li>
+                    <span>{{ condition.value.text }}</span>
+                    <span>by {{ condition.value.satisfactionDate }}</span>
+                    <button type="button" mat-icon-button (click)="removeCondition($index)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            <div class="condition-add decision-form" [formGroup]="newConditionForm">
+              <app-inputs [field]="conditionTextField" [group]="newConditionForm"></app-inputs>
+              <app-inputs [field]="conditionDateField" [group]="newConditionForm"></app-inputs>
+              <div class="condition-add-action">
+                <app-button type="button" variant="secondary" icon="add" (click)="addCondition()">
+                  Add condition
+                </app-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+            <app-button type="submit" variant="success" icon="rule"
+              >Grant with conditions</app-button
+            >
+          </div>
+        </form>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Grant limited licence">
+      <div class="tab-body">
+        <form [formGroup]="limitedForm" class="decision-form" (ngSubmit)="submitGrantLimited()">
+          <app-inputs [field]="justificationField" [group]="limitedForm"></app-inputs>
+          <app-inputs
+            [field]="activitiesField"
+            [group]="limitedForm"
+            [formSelectData]="limitedSelectData"
+          ></app-inputs>
+          <div class="dialog-actions">
+            <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+            <app-button type="submit" variant="success" icon="assignment"
+              >Grant limited licence</app-button
+            >
+          </div>
+        </form>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Refuse">
+      <div class="tab-body">
+        <form [formGroup]="refuseForm" class="decision-form" (ngSubmit)="submitRefuse()">
+          <app-inputs [field]="justificationField" [group]="refuseForm"></app-inputs>
+
+          <div class="condition-section">
+            <p class="condition-heading">Grounds for refusal</p>
+            @if (reasonsArray.length > 0) {
+              <ul class="condition-list">
+                @for (reason of reasonsArray.controls; track $index) {
+                  <li>
+                    <span>{{ reason.value.reason }}</span>
+                    <span>{{ reason.value.articleCitation }}</span>
+                    <button type="button" mat-icon-button (click)="removeReason($index)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            <div class="condition-add decision-form" [formGroup]="newReasonForm">
+              <app-inputs [field]="refuseReasonField" [group]="newReasonForm"></app-inputs>
+              <app-inputs [field]="articleCitationField" [group]="newReasonForm"></app-inputs>
+              <div class="condition-add-action">
+                <app-button type="button" variant="secondary" icon="add" (click)="addReason()">
+                  Add reason
+                </app-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+            <app-button type="submit" variant="danger" icon="block">Refuse licence</app-button>
+          </div>
+        </form>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

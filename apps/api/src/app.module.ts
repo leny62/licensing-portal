@@ -8,7 +8,9 @@ import { LoggerModule } from 'nestjs-pino';
 import { configuration } from './config/configuration';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import { SystemLogInterceptor } from './common/interceptors/system-log.interceptor';
+import { ObservabilityModule } from './common/observability/observability.module';
 import { AuditModule } from './infra/audit/audit.module';
 import { KeysModule } from './infra/keys/keys.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
@@ -68,6 +70,7 @@ const redactedLogPaths = [
       },
     ]),
     KeysModule,
+    ObservabilityModule,
     StorageModule,
     AuditModule,
     PrismaModule,
@@ -88,6 +91,10 @@ const redactedLogPaths = [
     {
       provide: APP_INTERCEPTOR,
       useClass: CorrelationIdInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

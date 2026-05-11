@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
@@ -22,7 +22,7 @@ export class AuditController {
   @Get()
   async list(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('applicationId', new ParseUUIDPipe({ version: '4' })) applicationId: string,
+    @Param('applicationId') applicationId: string,
     @Query() query: ListAuditQueryDto,
   ): Promise<PagedResponse<ApplicationAuditResponse>> {
     return this.auditReaderService.list(user, applicationId, query);
@@ -32,7 +32,7 @@ export class AuditController {
   @Roles(UserRole.ADMIN, UserRole.APPROVER)
   async verify(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('applicationId', new ParseUUIDPipe({ version: '4' })) applicationId: string,
+    @Param('applicationId') applicationId: string,
   ): Promise<AuditChainVerificationResult> {
     return this.auditReaderService.verify(user, applicationId);
   }

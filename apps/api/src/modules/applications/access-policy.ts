@@ -30,6 +30,7 @@ export const canEditDraft = (actor: ApplicationActor, application: Application):
   return (
     actor.role === UserRole.APPLICANT &&
     application.applicantId === actor.id &&
-    application.state === ApplicationState.DRAFT
+    (application.state === ApplicationState.DRAFT ||
+      application.state === ApplicationState.AWAITING_APPLICANT_RESPONSE)
   );
 };
