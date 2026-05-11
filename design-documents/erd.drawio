@@ -1,0 +1,112 @@
+<mxfile host="65bd71144e">
+    <diagram id="erd-bnr" name="ERD — BNR Regulation Domain">
+        <mxGraphModel dx="2444" dy="1179" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1500" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Licensing Portal ERD" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="1720" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="Blue: identity. Green: licensing core. Amber: regulator artefacts. Red: append-only audit. Grey: reference data." style="text;html=1;align=center;fontSize=12;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="50" width="1720" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="tUsers" value="users&#xa;&#xa;PK  id : uuid&#xa;UQ  email : citext&#xa;     password_hash : text&#xa;     full_name : text&#xa;     role : enum(APPLICANT, REVIEWER, APPROVER, ADMIN)&#xa;     institution_name : text NULL&#xa;     is_active : bool&#xa;     failed_login_count : int&#xa;     locked_until : timestamptz NULL&#xa;     created_at, updated_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="100" width="360" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="tRefresh" value="refresh_tokens&#xa;&#xa;PK  id : uuid&#xa;FK  user_id&#xa;     family_id, device_id&#xa;     token_hash : bytea&#xa;     issued_at, expires_at&#xa;     revoked_at NULL, revoke_reason NULL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="350" width="360" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="tMfa" value="user_mfa_secrets / user_mfa_recovery_codes&#xa;(unchanged from prior ERD)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="540" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="tApplications" value="&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;applications&lt;br&gt;&lt;br&gt;PK  id : uuid&lt;br&gt;UQ  reference_number : text&lt;br&gt;     application_kind : enum(NEW_BANK, FOREIGN_SUBSIDIARY, REPRESENTATIVE_OFFICE)&lt;br&gt;     bank_category : enum(COMMERCIAL, DEVELOPMENT, COOPERATIVE, MORTGAGE)&lt;br&gt;FK  applicant_user_id&lt;br&gt;     institution_name, legal_form, country&lt;br&gt;     contact_person, contact_email, contact_phone&lt;br&gt;     summary&lt;br&gt;     state : enum&lt;br&gt;FK  current_reviewer_id NULL&lt;br&gt;FK  approver_id NULL&lt;br&gt;     row_version : int (optimistic lock)&lt;br&gt;     submitted_at, completeness_evaluated_at NULL&lt;br&gt;     decided_at NULL&lt;br&gt;     created_at, updated_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="100" width="500" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="tCapital" value="capital_declarations&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     amount_rwf : bigint  (paid-up cash capital)&#xa;     source_summary : text&#xa;     attested_at : timestamptz&#xa;FK  attested_by_user_id  (the applicant)&#xa;UQ  (application_id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="490" width="500" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="tShareholders" value="significant_shareholders&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     type : enum(INDIVIDUAL, CORPORATE)&#xa;     legal_name, identification_number, country&#xa;     holding_percentage : numeric(5,2)  (≥5.00)&#xa;     source_of_funds : text&#xa;     past_ventures : text&#xa;     fit_and_proper_status : enum(PENDING, CLEARED, FAILED)&#xa;     declaration_signed_at : timestamptz NULL&#xa;     created_at, updated_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="680" width="500" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="tManagers" value="senior_managers&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     role : enum(CEO, CFO, COO, CIA, CRO, CIO, OTHER)&#xa;     full_name, identification_number&#xa;     qualifications : text&#xa;     certifications : text[]  (ACCA, CPA, CFA, ...)&#xa;     years_experience : int&#xa;     fit_and_proper_status : enum(PENDING, CLEARED, FAILED)&#xa;     created_at, updated_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="930" width="500" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="tDocuments" value="application_documents&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;FK  shareholder_id NULL  (when slot is per-shareholder)&#xa;FK  manager_id NULL  (when slot is per-manager)&#xa;     slot : enum (article-11 + article-12 mappings)&#xa;     version : int  (atomic per (application, slot, owner))&#xa;     original_filename, mime_type, byte_size&#xa;     storage_path, wrapped_dek, iv, auth_tag&#xa;FK  uploader_user_id&#xa;     uploaded_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="100" width="500" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="tDecisions" value="decisions&#xa;&#xa;PK  id : uuid&#xa;FK  application_id (UNIQUE: one decision per app)&#xa;     type : enum(GRANT, GRANT_WITH_CONDITIONS, GRANT_LIMITED, REFUSE)&#xa;     conditions : jsonb NULL  (when type = GRANT_WITH_CONDITIONS)&#xa;     allowed_activities : text[] NULL  (when type = GRANT_LIMITED)&#xa;     restricted_activities : text NULL  (when type = GRANT_LIMITED)&#xa;     reasons : jsonb NULL  (when type = REFUSE; cite failing articles)&#xa;     justification : text&#xa;FK  decided_by_user_id  (the approver)&#xa;     decided_at : timestamptz" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="380" width="500" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="tLetters" value="letters_of_information&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     type : enum(COMPLETE, DEFICIENT)&#xa;     deficiencies : jsonb NULL  (per-slot or per-entity)&#xa;     rectification_deadline : timestamptz NULL&#xa;     pdf_document_id : uuid NULL  (rendered + signed PDF)&#xa;FK  issued_by_user_id&#xa;     issued_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="660" width="500" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="tSla" value="application_sla_clocks&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     kind : enum(COMPLETENESS, ASSESSMENT, ABSOLUTE_DECISION, LICENCE_FEE)&#xa;     started_at, due_at : timestamptz&#xa;     warned_at NULL  (set when 80% elapsed)&#xa;     breached_at NULL  (set when 100% elapsed)&#xa;     closed_at NULL  (set when satisfied)&#xa;UQ  (application_id, kind)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="900" width="500" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="tFees" value="fees&#xa;&#xa;PK  id : uuid&#xa;FK  application_id&#xa;     kind : enum(APPLICATION, LICENCE, SUPERVISION, REP_OFFICE_APPLICATION, REP_OFFICE_SUPERVISION)&#xa;     amount_rwf : bigint&#xa;     due_at : timestamptz&#xa;     paid_at : timestamptz NULL&#xa;FK  evidence_document_id NULL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="1160" width="500" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="tAudit" value="application_audit&#xa;&#xa;PK  id : uuid&#xa;FK  application_id, actor_user_id&#xa;     action, from_state, to_state&#xa;     justification, source_ip, correlation_id&#xa;     payload : jsonb&#xa;     previous_hash, entry_hash : bytea&#xa;     occurred_at, clock_offset_ms&#xa;APPEND-ONLY (DB role + trigger + chain)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="100" width="500" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="tNotifs" value="notifications&#xa;&#xa;PK  id&#xa;FK  user_id&#xa;FK  application_id NULL&#xa;     kind, payload : jsonb&#xa;     read_at NULL, created_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="380" width="500" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="tCapitalThresholds" value="bank_category_thresholds (reference)&#xa;&#xa;PK  category : enum&#xa;     min_paid_up_capital_rwf : bigint&#xa;Seeded from Article 4. Read-only at runtime." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="580" width="500" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="tSlotSpecs" value="document_slot_specs (reference)&#xa;&#xa;PK  slot : enum&#xa;     required_for_categories : text[]&#xa;     allowed_mime_types : text[]&#xa;     max_bytes : int&#xa;     per_owner : enum(APPLICATION, SHAREHOLDER, MANAGER)&#xa;Seeded from Article 11 + 12." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;fontSize=11;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="760" width="500" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="eUsersApp" value="applicant 1 — N" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="tUsers" target="tApplications" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppCapital" value="1 — 1" style="endArrow=ERone;html=1;startArrow=ERone;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tCapital" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppShare" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=0;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tShareholders" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppMgr" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=0.6;exitY=1;exitDx=0;exitDy=0;entryX=0.6;entryY=0;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tManagers" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppDocs" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tDocuments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppDecision" style="endArrow=ERone;html=1;startArrow=ERone;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tDecisions" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppLetters" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tLetters" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppSla" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tSla" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppFees" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tFees" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eShareDocs" value="docs by shareholder" style="endArrow=ERmany;html=1;startArrow=ERone;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" parent="1" source="tShareholders" target="tDocuments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eMgrDocs" value="docs by manager" style="endArrow=ERmany;html=1;startArrow=ERone;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" parent="1" source="tManagers" target="tDocuments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppAudit" value="1 — N (chain)" style="endArrow=ERmany;html=1;startArrow=ERone;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tAudit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eAppNotif" style="endArrow=ERmany;html=1;startArrow=ERone;dashed=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tApplications" target="tNotifs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eFeeEvidence" value="evidence" style="endArrow=ERone;html=1;startArrow=ERone;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="tFees" target="tDocuments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eThreshold" value="enforces" style="endArrow=ERone;html=1;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="tCapitalThresholds" target="tCapital" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eSlotSpec" value="enforces" style="endArrow=ERone;html=1;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="tSlotSpecs" target="tDocuments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

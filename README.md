@@ -7,8 +7,10 @@ Monorepo, npm workspaces.
 ```
 apps/api          NestJS + Prisma + PostgreSQL service
 apps/web          Angular + Electron client
-packages/api-types  shared types generated from the API's OpenAPI document
+design-documents  architecture diagrams and design document
 ```
+
+`packages/api-types` is reserved for generated OpenAPI client types. It is not required by the current API or web build.
 
 ## Prerequisites
 
